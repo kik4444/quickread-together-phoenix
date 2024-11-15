@@ -8,4 +8,9 @@ defmodule QuickreadTogetherWeb.RoomChannel do
   def join("room:" <> _id, _params, _socket) do
     {:error, %{reason: "unauthorized"}}
   end
+
+  def handle_in("new_msg", %{"body" => body}, socket) do
+    broadcast!(socket, "new_msg", %{body: body})
+    {:noreply, socket}
+  end
 end

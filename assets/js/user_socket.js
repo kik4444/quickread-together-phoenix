@@ -64,6 +64,12 @@ chatInput.addEventListener("keypress", event => {
     }
 });
 
+channel.on("new_msg", payload => {
+    let messageItem = document.createElement("p");
+    messageItem.innerText = `${payload.body}`;
+    messagesContainer.appendChild(messageItem);
+});
+
 channel.join()
     .receive("ok", resp => { console.log("Joined successfully", resp); })
     .receive("error", resp => { console.log("Unable to join", resp); });
