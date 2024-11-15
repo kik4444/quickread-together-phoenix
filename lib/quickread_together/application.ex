@@ -9,11 +9,13 @@ defmodule QuickreadTogether.Application do
   def start(_type, _args) do
     children = [
       QuickreadTogetherWeb.Telemetry,
-      {DNSCluster, query: Application.get_env(:quickread_together, :dns_cluster_query) || :ignore},
+      {DNSCluster,
+       query: Application.get_env(:quickread_together, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: QuickreadTogether.PubSub},
       # Start a worker by calling: QuickreadTogether.Worker.start_link(arg)
       # {QuickreadTogether.Worker, arg},
       # Start to serve requests, typically the last entry
+      QuickreadTogetherWeb.Presence,
       QuickreadTogetherWeb.Endpoint
     ]
 

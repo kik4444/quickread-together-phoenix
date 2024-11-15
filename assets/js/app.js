@@ -1,6 +1,6 @@
 // If you want to use Phoenix channels, run `mix help phx.gen.channel`
 // to get started and then uncomment the line below.
-import "./user_socket.js";
+// import "./user_socket.js";
 
 // You can include dependencies in two ways.
 //
@@ -18,7 +18,7 @@ import "./user_socket.js";
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
 import "phoenix_html";
 // Establish Phoenix Socket and LiveView configuration.
-import { Socket } from "phoenix";
+import { Socket, Presence } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import topbar from "../vendor/topbar";
 
@@ -41,3 +41,24 @@ liveSocket.connect();
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket;
+
+let socket = new Socket("/socket", { params: { token: window.userToken } });
+let channel = socket.channel("room:lobby", { name: window.location.search.split("=")[1] });
+let presence = new Presence(channel);
+
+function renderOnlineUsers(presence) {
+    let response = "";
+
+    presence.list((id, { metas: [first, ...rest] }) => {
+        let count = rest.length + 1;
+        response += `<br>${id} (count: ${count})</br>`;
+    });
+
+    document.querySelector("main").innerHTML = response;
+}
+
+socket.connect();
+
+presence.onSync(() => renderOnlineUsers(presence));
+
+channel.join();
