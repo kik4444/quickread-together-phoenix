@@ -6,4 +6,8 @@ defmodule QuickreadTogetherWeb.PageController do
     # so skip the default app layout.
     render(conn, :home, layout: false)
   end
+
+  def red(conn, _params) do
+    redirect(conn, to: ~p"/hello")
+  end
 end
