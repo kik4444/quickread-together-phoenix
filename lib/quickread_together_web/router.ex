@@ -21,6 +21,8 @@ defmodule QuickreadTogetherWeb.Router do
     get "/hello", HelloController, :index
     get "/hello/:messenger", HelloController, :show
     get "/red", PageController, :red
+
+    live "/livetest", LiveTest
   end
 
   # Other scopes may use custom stacks.
