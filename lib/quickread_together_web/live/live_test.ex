@@ -3,15 +3,26 @@ defmodule QuickreadTogetherWeb.LiveTest do
 
   def render(assigns) do
     ~H"""
-    Current temperature: <%= @temperature %>°C <button phx-click="increase_temp">+</button>
+    <div id="thermostat" phx-window-keyup="update_temp">
+      Current temperature: <%= @temperature %>
+    </div>
     """
+  end
+
+  def handle_event("update_temp", %{"key" => "ArrowUp"}, socket) do
+    {:noreply, update(socket, :temperature, &(&1 + 1))}
+  end
+
+  def handle_event("update_temp", %{"key" => "ArrowDown"}, socket) do
+    new_temp = socket.assigns.temperature - 1
+    {:noreply, assign(socket, :temperature, new_temp)}
+  end
+
+  def handle_event("update_temp", _, socket) do
+    {:noreply, socket}
   end
 
   def mount(_params, _session, socket) do
     {:ok, assign(socket, temperature: 16)}
-  end
-
-  def handle_event("increase_temp", _params, socket) do
-    {:noreply, update(socket, :temperature, &(&1 + 1))}
   end
 end
