@@ -3,7 +3,7 @@ defmodule QuickreadTogetherWeb.LiveTest do
 
   def render(assigns) do
     ~H"""
-    <div id="thermostat" phx-window-keyup="update_temp">
+    <div id="thermostat" phx-window-keydown="update_temp">
       Current temperature: <%= @temperature %>
     </div>
     """
