@@ -17,7 +17,7 @@ defmodule QuickreadTogetherWeb.CoreComponents do
   use Phoenix.Component
 
   alias Phoenix.LiveView.JS
-  import QuickreadTogetherWeb.Gettext
+  use Gettext, backend: QuickreadTogetherWeb.Gettext
 
   @doc """
   Renders a modal.

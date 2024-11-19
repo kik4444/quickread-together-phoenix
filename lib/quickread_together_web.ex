@@ -43,7 +43,7 @@ defmodule QuickreadTogetherWeb do
         layouts: [html: QuickreadTogetherWeb.Layouts]
 
       import Plug.Conn
-      import QuickreadTogetherWeb.Gettext
+      use Gettext, backend: QuickreadTogetherWeb.Gettext
 
       unquote(verified_routes())
     end
@@ -85,7 +85,7 @@ defmodule QuickreadTogetherWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import QuickreadTogetherWeb.CoreComponents
-      import QuickreadTogetherWeb.Gettext
+      use Gettext, backend: QuickreadTogetherWeb.Gettext
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
