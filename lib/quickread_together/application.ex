@@ -9,7 +9,6 @@ defmodule QuickreadTogether.Application do
   def start(_type, _args) do
     children = [
       QuickreadTogetherWeb.Telemetry,
-      {DNSCluster, query: Application.get_env(:quickread_together, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: QuickreadTogether.PubSub},
       # Start a worker by calling: QuickreadTogether.Worker.start_link(arg)
       # {QuickreadTogether.Worker, arg},
