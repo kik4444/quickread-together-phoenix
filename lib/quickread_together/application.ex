@@ -8,6 +8,7 @@ defmodule QuickreadTogether.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      QuickreadTogether.State,
       QuickreadTogetherWeb.Telemetry,
       {Phoenix.PubSub, name: QuickreadTogether.PubSub},
       # Start a worker by calling: QuickreadTogether.Worker.start_link(arg)
