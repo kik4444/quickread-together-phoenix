@@ -16,6 +16,8 @@ defmodule QuickreadTogetherWeb.Router do
 
   scope "/", QuickreadTogetherWeb do
     pipe_through :browser
+
+    live "/", ReaderLive
   end
 
   # Other scopes may use custom stacks.
