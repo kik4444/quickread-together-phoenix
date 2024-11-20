@@ -27,11 +27,11 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   def mount(_params, _session, socket) do
     if connected?(socket), do: PubSub.subscribe(QuickreadTogether.PubSub, "reader:main")
 
-    {:ok, assign(socket, raw_text: %{"value" => State.get()})}
+    {:ok, assign(socket, raw_text: %{"value" => State.get(:raw_text)})}
   end
 
   def handle_event("text_changed", %{"raw_text" => new_text}, socket) do
-    State.set(new_text)
+    State.set({:raw_text, new_text})
     PubSub.broadcast!(QuickreadTogether.PubSub, "reader:main", {:new_text, new_text})
     {:noreply, socket}
   end

@@ -14,17 +14,17 @@ defmodule QuickreadTogether.State do
   end
 
   @impl true
-  def handle_cast({:new_text, new_text}, _) do
-    true = :ets.insert(:state, {:raw_text, new_text})
+  def handle_cast({_field, _value} = args, _) do
+    true = :ets.insert(:state, args)
     {:noreply, nil}
   end
 
   def start_link(_), do: GenServer.start_link(__MODULE__, nil, name: __MODULE__)
 
-  def get do
-    [raw_text: raw_text] = :ets.lookup(:state, :raw_text)
-    raw_text
+  def get(field) do
+    [{^field, value}] = :ets.lookup(:state, field)
+    value
   end
 
-  def set(new_text), do: GenServer.cast(__MODULE__, {:new_text, new_text})
+  def set({_field, _value} = args), do: GenServer.cast(__MODULE__, args)
 end
