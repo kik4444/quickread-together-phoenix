@@ -6,14 +6,14 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   def render(assigns) do
     ~H"""
     <main class="h-screen w-screen grid place-items-center">
-      <.form for={@text} phx-change="text_changed">
+      <.form for={@raw_text} phx-change="text_changed">
         <textarea
           id="textarea"
           placeholder="Enter text to read quickly."
           class="min-w-[50vw]"
-          name="text"
+          name="raw_text"
           phx-debounce="500"
-        ><%= @text["content"] %></textarea>
+        ><%= @raw_text["value"] %></textarea>
       </.form>
 
       <p id="display" class="font-semibold leading-[1.3] tracking-normal antialiased">
@@ -25,14 +25,14 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   end
 
   def mount(_params, _session, socket) do
-    if connected?(socket), do: PubSub.subscribe(QuickreadTogether.PubSub, "new_text")
+    if connected?(socket), do: PubSub.subscribe(QuickreadTogether.PubSub, "reader:main")
 
-    {:ok, assign(socket, text: %{"content" => State.get()})}
+    {:ok, assign(socket, raw_text: %{"value" => State.get()})}
   end
 
-  def handle_event("text_changed", %{"text" => new_text}, socket) do
+  def handle_event("text_changed", %{"raw_text" => new_text}, socket) do
     State.set(new_text)
-    PubSub.broadcast!(QuickreadTogether.PubSub, "new_text", {:new_text, new_text})
+    PubSub.broadcast!(QuickreadTogether.PubSub, "reader:main", {:new_text, new_text})
     {:noreply, socket}
   end
 

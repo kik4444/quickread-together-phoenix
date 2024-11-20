@@ -9,22 +9,22 @@ defmodule QuickreadTogether.State do
   @impl true
   def init(_) do
     :state = :ets.new(:state, [:set, :protected, :named_table])
-    true = :ets.insert(:state, {:text, "Press start to begin reading quickly."})
+    true = :ets.insert(:state, {:raw_text, "Press start to begin reading quickly."})
     {:ok, nil}
   end
 
   @impl true
-  def handle_cast({:update, new_state}, _) do
-    true = :ets.insert(:state, {:text, new_state})
+  def handle_cast({:new_text, new_text}, _) do
+    true = :ets.insert(:state, {:raw_text, new_text})
     {:noreply, nil}
   end
 
   def start_link(_), do: GenServer.start_link(__MODULE__, nil, name: __MODULE__)
 
   def get do
-    [text: text] = :ets.lookup(:state, :text)
-    text
+    [raw_text: raw_text] = :ets.lookup(:state, :raw_text)
+    raw_text
   end
 
-  def set(new_state), do: GenServer.cast(__MODULE__, {:update, new_state})
+  def set(new_text), do: GenServer.cast(__MODULE__, {:new_text, new_text})
 end
