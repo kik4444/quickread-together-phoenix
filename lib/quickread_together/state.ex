@@ -6,10 +6,19 @@
 defmodule QuickreadTogether.State do
   use GenServer
 
+  @initial_state [
+    raw_text: "Welcome to Quickread Together. Press start to begin reading quickly.",
+    playing: false
+  ]
+
   @impl true
   def init(_) do
     :state = :ets.new(:state, [:set, :protected, :named_table])
-    true = :ets.insert(:state, {:raw_text, "Press start to begin reading quickly."})
+
+    Enum.each(@initial_state, fn key_val ->
+      true = :ets.insert(:state, key_val)
+    end)
+
     {:ok, nil}
   end
 

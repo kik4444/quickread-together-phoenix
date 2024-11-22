@@ -1,16 +1,19 @@
 <main class="h-screen w-screen grid place-items-center">
-  <.form for={@state} phx-change="text_changed" class="grid place-items-center w-full">
+  <.form for={@form} phx-change="text_changed" class="grid place-items-center w-full">
     <textarea
       id="textarea"
       placeholder="Enter text to read quickly."
       name="raw_text"
       phx-debounce="500"
       class="min-w-[50%]"
-    ><%= @state["raw_text"] %></textarea>
+    ><%= @form["raw_text"] %></textarea>
   </.form>
 
   <p id="display" class="font-semibold leading-[1.3] tracking-normal antialiased">
     TEMP
   </p>
-  <.button>Start</.button>
+
+  <.button phx-click="play_pause">
+    <%= if @playing, do: "Pause", else: "Play" %>
+  </.button>
 </main>

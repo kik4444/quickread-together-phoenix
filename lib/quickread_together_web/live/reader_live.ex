@@ -1,17 +1,24 @@
 defmodule QuickreadTogetherWeb.ReaderLive do
   use QuickreadTogetherWeb, :live_view
-  alias Phoenix.PubSub
   alias QuickreadTogether.State
 
-  def mount(_params, _session, socket) do
-    if connected?(socket), do: PubSub.subscribe(QuickreadTogether.PubSub, "reader:main")
+  defp broadcast!(msg) do
+    Phoenix.PubSub.broadcast!(QuickreadTogether.PubSub, "reader:main", msg)
+  end
 
-    {:ok, assign(socket, state: %{"raw_text" => State.get(:raw_text)})}
+  def mount(_params, _session, socket) do
+    if connected?(socket), do: Phoenix.PubSub.subscribe(QuickreadTogether.PubSub, "reader:main")
+
+    {:ok,
+     assign(socket,
+       form: %{"raw_text" => State.get(:raw_text)},
+       playing: State.get(:playing)
+     )}
   end
 
   def handle_event("text_changed", %{"raw_text" => new_text}, socket) do
     State.set({:raw_text, new_text})
-    PubSub.broadcast!(QuickreadTogether.PubSub, "reader:main", {:new_text, new_text})
+    broadcast!({:new_text, new_text})
     {:noreply, socket}
   end
 
