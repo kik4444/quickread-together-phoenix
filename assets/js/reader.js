@@ -23,8 +23,12 @@ const wordsPerMinute = 300;
 
 let chunks = split(Textarea.value, chunkSize);
 
-function displayChunk() {
-    Display.innerText = chunks[currentIndex].chunk;
+const displayChunk = () => Display.innerText = chunks[currentIndex].chunk;
+
+function stop() {
+    // TODO send event to server
+    // set playing to false server-side
+    // set currentIndex to 0, but for everyone?
 }
 
 function tick() {
@@ -33,8 +37,7 @@ function tick() {
             ++currentIndex;
             displayChunk();
         } else {
-            // TODO
-            // stop()
+            stop();
         }
     }
 
@@ -43,7 +46,7 @@ function tick() {
 
 setTimeout(tick, wordsPerMinute);
 
-window.addEventListener("phx:page_mounted", _ => displayChunk());
+Display.addEventListener("display_mounted", _ => displayChunk());
 
 //@ts-expect-error
 window.addEventListener("phx:playing", e => playing = e.detail.playing);
