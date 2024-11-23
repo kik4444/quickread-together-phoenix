@@ -9,9 +9,7 @@
     ><%= @form["raw_text"] %></textarea>
   </.form>
 
-  <p id="display" class="font-semibold leading-[1.3] tracking-normal antialiased">
-    TEMP
-  </p>
+  <p id="display" class="font-semibold leading-[1.3] tracking-normal antialiased">Loading</p>
 
   <.button phx-click="play_pause">
     <%= if @playing, do: "Pause", else: "Play" %>

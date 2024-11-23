@@ -7,7 +7,13 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   end
 
   def mount(_params, _session, socket) do
-    if connected?(socket), do: Phoenix.PubSub.subscribe(QuickreadTogether.PubSub, "reader:main")
+    socket =
+      if connected?(socket) do
+        Phoenix.PubSub.subscribe(QuickreadTogether.PubSub, "reader:main")
+        push_event(socket, "page_mounted", %{})
+      else
+        socket
+      end
 
     {:ok,
      assign(socket,
