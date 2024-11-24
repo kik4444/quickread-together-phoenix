@@ -17,15 +17,29 @@ let playing = false;
 let currentIndex = 0;
 const chunkSize = 1;
 const wordsPerMinute = 300;
-
 let chunks = split(Textarea.value, chunkSize);
 
+// TODO return new_text handling on Textarea
+
 //@ts-expect-error
-window.addEventListener("phx:playing", e => playing = e.detail.playing);
+window.addEventListener("phx:playing_toggle", e => playing = e.detail.playing);
 
 let Hooks = {};
 
 Hooks.Display = {
+    mounted() {
+        this.displayChunk();
+
+        //@ts-expect-error
+        this.handleEvent("reader_reset", _ => {
+            playing = false;
+            currentIndex = 0;
+        });
+
+        // NOTE handler must be an arrow function due to "this" problem with setTimeout
+        setTimeout(() => this.tick(), wordsPerMinute);
+    },
+
     displayChunk() {
         //@ts-expect-error
         this.el.innerText = chunks[currentIndex].chunk;
@@ -37,23 +51,19 @@ Hooks.Display = {
                 ++currentIndex;
                 this.displayChunk();
             } else {
-                this.stop();
+                this.end();
             }
         }
 
         setTimeout(() => this.tick(), wordsPerMinute);
     },
 
-    stop() {
+    end() {
         // TODO send event to server
         // set playing to false server-side
         // set currentIndex to 0, but for everyone?
-    },
-
-    mounted() {
-        this.displayChunk();
-
-        setTimeout(() => this.tick(), wordsPerMinute);
+        //@ts-expect-error
+        this.pushEvent("reader_ended");
     },
 };
 

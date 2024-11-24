@@ -31,6 +31,14 @@ defmodule QuickreadTogetherWeb.ReaderLive do
 
     {:noreply, assign(socket, [new_state])}
   end
+
+  def handle_event("reader_ended", _, socket) do
+    new_state = {:playing, false}
+
+    State.set(new_state)
+    broadcast!(:reader_reset)
+
+    {:noreply, assign(socket, [new_state])}
   end
 
   def handle_info({:new_text, new_text}, socket) do
@@ -38,6 +46,10 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   end
 
   def handle_info({:playing, playing}, socket) do
-    {:noreply, push_event(socket, "playing", %{playing: playing})}
+    {:noreply, push_event(socket, "playing_toggle", %{playing: playing})}
+  end
+
+  def handle_info(:reader_reset, socket) do
+    {:noreply, push_event(socket, "reader_reset", %{})}
   end
 end
