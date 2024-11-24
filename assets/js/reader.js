@@ -14,6 +14,7 @@ const Textarea = $(document.querySelector("#textarea"));
 
 // Initial state
 let playing = false;
+let pendingStop = false; // Used to prevent sending stop events repeatedly until the server responds
 let currentIndex = 0;
 const chunkSize = 1;
 const wordsPerMinute = 300;
@@ -30,12 +31,6 @@ Hooks.Display = {
     mounted() {
         this.displayChunk();
 
-        //@ts-expect-error
-        this.handleEvent("reader_reset", _ => {
-            playing = false;
-            currentIndex = 0;
-        });
-
         // NOTE handler must be an arrow function due to "this" problem with setTimeout
         setTimeout(() => this.tick(), wordsPerMinute);
     },
@@ -49,21 +44,26 @@ Hooks.Display = {
         if (playing) {
             if (currentIndex < chunks.length - 1) {
                 ++currentIndex;
-                this.displayChunk();
             } else {
-                this.end();
+                if (!pendingStop) {
+                    pendingStop = true;
+                    this.end();
+                }
             }
         }
+
+        this.displayChunk();
 
         setTimeout(() => this.tick(), wordsPerMinute);
     },
 
     end() {
-        // TODO send event to server
-        // set playing to false server-side
-        // set currentIndex to 0, but for everyone?
         //@ts-expect-error
-        this.pushEvent("reader_ended");
+        this.pushEvent("reader_ended", {}, () => {
+            playing = false;
+            currentIndex = 0;
+            pendingStop = false;
+        });
     },
 };
 
