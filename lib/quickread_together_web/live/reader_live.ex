@@ -19,17 +19,18 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   def handle_event("text_changed", %{"raw_text" => new_text}, socket) do
     State.set({:raw_text, new_text})
     broadcast!({:new_text, new_text})
+
     {:noreply, socket}
   end
 
   def handle_event("play_pause", _, socket) do
-    playing = not socket.assigns.playing
-    new_state = {:playing, playing}
+    new_state = {:playing, not socket.assigns.playing}
 
     State.set(new_state)
     broadcast!(new_state)
 
-    {:noreply, assign(socket, playing: playing)}
+    {:noreply, assign(socket, [new_state])}
+  end
   end
 
   def handle_info({:new_text, new_text}, socket) do
