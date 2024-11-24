@@ -8,6 +8,15 @@
  * @property {number} stopOffset
  */
 
+/** @returns {TextChunk[]} */
+export function empty_chunk() {
+    return [{
+        chunk: "",
+        startOffset: 0,
+        stopOffset: 0
+    }];
+}
+
 /**
  * @param {string} text
  * @param {number} chunkSize
@@ -15,11 +24,7 @@
  */
 export default function (text, chunkSize) {
     if (!text) {
-        return [{
-            chunk: "",
-            startOffset: 0,
-            stopOffset: 0
-        }];
+        return empty_chunk();
     }
 
     /** @type {TextChunk[]} */
