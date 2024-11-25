@@ -15,9 +15,9 @@ defmodule QuickreadTogether.State do
   def init(_) do
     :state = :ets.new(:state, [:set, :protected, :named_table])
 
-    Enum.each(@initial_state, fn key_val ->
+    for key_val <- @initial_state do
       true = :ets.insert(:state, key_val)
-    end)
+    end
 
     {:ok, nil}
   end
