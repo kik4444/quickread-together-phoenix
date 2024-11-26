@@ -1,5 +1,5 @@
 <main class="h-screen w-screen grid place-items-center">
-  <.form for={@form} phx-change="text_changed" class="grid place-items-center w-full">
+  <.form for={@textarea} phx-change="text_changed" class="grid place-items-center w-full">
     <textarea
       id="textarea"
       placeholder="Enter text to read quickly."
@@ -7,11 +7,11 @@
       phx-debounce="500"
       class="min-w-[50%]"
       readonly={@playing}
-    ><%= @form["raw_text"] %></textarea>
+    ><%= @textarea["raw_text"] %></textarea>
   </.form>
 
   <p id="display" class="font-semibold leading-[1.3] tracking-normal antialiased">
-    Quickread Together
+    <%= @current_chunk %>
   </p>
 
   <.button phx-click="play_pause">

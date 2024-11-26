@@ -1,9 +1,11 @@
-# Implements multiple readers single writer access to an ETS table.
-#
-# Writes to the ETS are serialized through this GenServer,
-# while reads are performed by the caller process concurrently.
-
 defmodule QuickreadTogether.State do
+  @moduledoc """
+  Implements multiple readers single writer access to an ETS table.
+
+  Writes to the ETS are serialized through this GenServer,
+  while reads are performed by the caller process concurrently.
+
+  """
   use GenServer
 
   @initial_state [

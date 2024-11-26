@@ -13,8 +13,9 @@ defmodule QuickreadTogetherWeb.ReaderLive do
 
     {:ok,
      assign(socket,
-       form: %{"raw_text" => State.get(:raw_text)},
-       playing: State.get(:playing)
+       textarea: %{"raw_text" => State.get(:raw_text)},
+       playing: State.get(:playing),
+       current_chunk: "Quickread Together"
      )}
   end
 
