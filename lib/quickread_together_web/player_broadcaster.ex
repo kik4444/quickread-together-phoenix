@@ -21,6 +21,10 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
     # TODO chunk_size
     parsed_chunks = TextChunk.parse(State.get(:raw_text))
 
+    new_state = {:textarea_locked, true}
+    State.set(new_state)
+    ReaderLive.broadcast!(new_state)
+
     send(self(), :next_chunk)
 
     {:noreply, parsed_chunks}
@@ -35,7 +39,7 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
   end
 
   # Move to the next chunk.
-  # If paused, do nothing.
+  # If paused, save current chunk.
   @impl true
   def handle_info(:next_chunk, [%TextChunk{} = current_chunk | tail] = total_left) do
     case State.get(:playing) do
@@ -48,6 +52,9 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
         {:noreply, tail}
 
       false ->
+        # Save current chunk when pause is first observed
+        # to sync it to newly-joined clients
+        State.set({:current_chunk, current_chunk.chunk})
         {:noreply, total_left}
     end
   end
@@ -55,10 +62,10 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
   # End of chunks to show.
   @impl true
   def handle_info(:next_chunk, []) do
-    new_state = {:playing, false}
-
-    State.set(new_state)
-    ReaderLive.broadcast!(new_state)
+    for new_state <- [playing: false, textarea_locked: false] do
+      State.set(new_state)
+      ReaderLive.broadcast!(new_state)
+    end
 
     {:noreply, []}
   end
