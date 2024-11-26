@@ -1,8 +1,11 @@
 defmodule QuickreadTogetherWeb.ReaderLive do
   use QuickreadTogetherWeb, :live_view
-  alias QuickreadTogether.State
 
-  defp broadcast!(msg) do
+  alias QuickreadTogether.State
+  alias QuickreadTogether.TextChunk
+  alias QuickreadTogetherWeb.PlayerBroadcaster
+
+  def broadcast!(msg) do
     Phoenix.PubSub.broadcast!(QuickreadTogether.PubSub, "reader:main", msg)
   end
 
@@ -20,6 +23,9 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   end
 
   def handle_event("text_changed", %{"raw_text" => new_text}, socket) do
+    # TODO decide what to do if text is currently paused.
+    # Reset it?
+
     State.set({:raw_text, new_text})
     broadcast!({:new_text, new_text})
 
@@ -27,10 +33,15 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   end
 
   def handle_event("play_pause", _, socket) do
-    new_state = {:playing, not socket.assigns.playing}
+    playing = not socket.assigns.playing
+    new_state = {:playing, playing}
 
     State.set(new_state)
     broadcast!(new_state)
+
+    if playing do
+      send(PlayerBroadcaster, :start)
+    end
 
     {:noreply, socket}
   end
@@ -41,5 +52,10 @@ defmodule QuickreadTogetherWeb.ReaderLive do
 
   def handle_info({:playing, _} = new_state, socket) do
     {:noreply, assign(socket, [new_state])}
+  end
+
+  def handle_info({:update_chunk, %TextChunk{} = parsed_chunk}, socket) do
+    # TODO select range in textarea
+    {:noreply, assign(socket, current_chunk: parsed_chunk.chunk)}
   end
 end
