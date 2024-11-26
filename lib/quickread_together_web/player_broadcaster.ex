@@ -42,10 +42,10 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
   # If paused, save current chunk.
   @impl true
   def handle_info(:next_chunk, [%TextChunk{} = current_chunk | tail] = total_left) do
+    ReaderLive.broadcast!({:update_chunk, current_chunk})
+
     case State.get(:playing) do
       true ->
-        ReaderLive.broadcast!({:update_chunk, current_chunk})
-
         # TODO words_per_minute
         Process.send_after(self(), :next_chunk, 300)
 
@@ -55,6 +55,7 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
         # Save current chunk when pause is first observed
         # to sync it to newly-joined clients
         State.set({:current_chunk, current_chunk.chunk})
+
         {:noreply, total_left}
     end
   end
