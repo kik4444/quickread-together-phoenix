@@ -12,7 +12,7 @@ defmodule QuickreadTogether.State do
     raw_text: "Welcome to Quickread Together. Press start to begin reading quickly.",
     playing: false,
     current_chunk: "Quickread Together",
-    textarea_locked: false
+    paused_in_play: false
   ]
 
   @impl true

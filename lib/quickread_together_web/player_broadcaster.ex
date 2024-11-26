@@ -21,7 +21,7 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
     # TODO chunk_size
     parsed_chunks = TextChunk.parse(State.get(:raw_text))
 
-    new_state = {:textarea_locked, true}
+    new_state = {:paused_in_play, true}
     State.set(new_state)
     ReaderLive.broadcast!(new_state)
 
@@ -62,7 +62,7 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
   # End of chunks to show.
   @impl true
   def handle_info(:next_chunk, []) do
-    for new_state <- [playing: false, textarea_locked: false] do
+    for new_state <- [playing: false, paused_in_play: false] do
       State.set(new_state)
       ReaderLive.broadcast!(new_state)
     end
