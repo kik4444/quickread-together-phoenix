@@ -21,7 +21,7 @@ defmodule QuickreadTogetherWeb.ReaderLive do
        textarea: %{"raw_text" => state.raw_text},
        playing: state.playing,
        current_chunk: state.current_chunk,
-       paused_in_play: state.paused_in_play
+       textarea_locked: state.textarea_locked
      )}
   end
 
@@ -55,7 +55,7 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {:noreply, assign(socket, [new_state])}
   end
 
-  def handle_info({:paused_in_play, _} = new_state, socket) do
+  def handle_info({:textarea_locked, _} = new_state, socket) do
     {:noreply, assign(socket, [new_state])}
   end
 
