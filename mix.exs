@@ -19,7 +19,7 @@ defmodule QuickreadTogether.MixProject do
   def application do
     [
       mod: {QuickreadTogether.Application, []},
-      extra_applications: [:logger, :runtime_tools, :os_mon]
+      extra_applications: [:logger, :runtime_tools, :os_mon, :wx, :observer]
     ]
   end
 
