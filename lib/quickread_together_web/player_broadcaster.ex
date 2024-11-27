@@ -17,22 +17,45 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
 
   # Clean start.
   @impl true
-  def handle_info(:start, []) do
+  def handle_info(:play, []) do
+    changes = Keyword.from_keys([:playing, :textarea_locked], true)
+
+    ReaderState.cast(&Map.merge(&1, Map.new(changes)))
+
+    for new_state <- changes do
+      ReaderLive.broadcast!(new_state)
+    end
+
     # TODO chunk_size
     parsed_chunks = TextChunk.parse(ReaderState.get(& &1.raw_text))
-
-    ReaderState.cast(&%{&1 | textarea_locked: true})
-    ReaderLive.broadcast!({:textarea_locked, true})
 
     send(self(), :next_chunk)
 
     {:noreply, parsed_chunks}
   end
 
+  # Pause during play
+  @impl true
+  def handle_info(:pause, state) do
+    with true <- ReaderState.get(& &1.playing) do
+      ReaderState.cast(&%{&1 | playing: false})
+      ReaderLive.broadcast!({:playing, false})
+    end
+
+    {:noreply, state}
+  end
+
   # Resume from pause.
   @impl true
-  def handle_info(:start, [%TextChunk{} | _] = total_left) do
-    send(self(), :next_chunk)
+  def handle_info(:play, [%TextChunk{} | _] = total_left) do
+    # Due to client latency, it's possible we may get a resume signal while we're already playing,
+    # so we should check that to avoid jumping over a chunk too quickly.
+    with false <- ReaderState.get(& &1.playing) do
+      ReaderState.cast(&%{&1 | playing: true})
+      ReaderLive.broadcast!({:playing, true})
+
+      send(self(), :next_chunk)
+    end
 
     {:noreply, total_left}
   end
@@ -52,7 +75,7 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
 
       false ->
         # Save current chunk when pause is first observed
-        # to sync it to newly-joined clients
+        # to sync it to newly-joined clients.
         ReaderState.cast(&%{&1 | current_chunk: current_chunk.chunk})
 
         {:noreply, total_left}

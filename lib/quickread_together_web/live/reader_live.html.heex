@@ -18,7 +18,7 @@
     <%= @current_chunk %>
   </p>
 
-  <.button phx-click="play_pause" phx-throttle="250">
+  <.button phx-click={if @playing, do: "pause_pressed", else: "play_pressed"} phx-throttle="250">
     <%= if @playing, do: "Pause", else: "Play" %>
   </.button>
 </main>

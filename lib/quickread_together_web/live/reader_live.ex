@@ -26,23 +26,22 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   end
 
   def handle_event("text_changed", %{"raw_text" => new_text}, socket) do
-    ReaderState.cast(&%{&1 | raw_text: new_text})
-
-    broadcast!({:new_text, new_text})
+    with false <- ReaderState.get(& &1.textarea_locked) do
+      ReaderState.cast(&%{&1 | raw_text: new_text})
+      broadcast!({:new_text, new_text})
+    end
 
     {:noreply, socket}
   end
 
-  def handle_event("play_pause", _, socket) do
-    playing = not socket.assigns.playing
+  def handle_event("play_pressed", _, socket) do
+    send(PlayerBroadcaster, :play)
 
-    ReaderState.cast(&%{&1 | playing: playing})
+    {:noreply, socket}
+  end
 
-    broadcast!({:playing, playing})
-
-    if playing do
-      send(PlayerBroadcaster, :start)
-    end
+  def handle_event("pause_pressed", _, socket) do
+    send(PlayerBroadcaster, :pause)
 
     {:noreply, socket}
   end
