@@ -1,7 +1,7 @@
 defmodule QuickreadTogetherWeb.ReaderLive do
   use QuickreadTogetherWeb, :live_view
 
-  alias QuickreadTogether.State
+  alias QuickreadTogether.ReaderState
   alias QuickreadTogether.TextChunk
   alias QuickreadTogetherWeb.PlayerBroadcaster
 
@@ -14,17 +14,20 @@ defmodule QuickreadTogetherWeb.ReaderLive do
       Phoenix.PubSub.subscribe(QuickreadTogether.PubSub, "reader:main")
     end
 
+    %ReaderState{} = state = ReaderState.get(& &1)
+
     {:ok,
      assign(socket,
-       textarea: %{"raw_text" => State.get(:raw_text)},
-       playing: State.get(:playing),
-       current_chunk: State.get(:current_chunk),
-       paused_in_play: State.get(:paused_in_play)
+       textarea: %{"raw_text" => state.raw_text},
+       playing: state.playing,
+       current_chunk: state.current_chunk,
+       paused_in_play: state.paused_in_play
      )}
   end
 
   def handle_event("text_changed", %{"raw_text" => new_text}, socket) do
-    State.set({:raw_text, new_text})
+    ReaderState.cast(&%{&1 | raw_text: new_text})
+
     broadcast!({:new_text, new_text})
 
     {:noreply, socket}
@@ -32,10 +35,10 @@ defmodule QuickreadTogetherWeb.ReaderLive do
 
   def handle_event("play_pause", _, socket) do
     playing = not socket.assigns.playing
-    new_state = {:playing, playing}
 
-    State.set(new_state)
-    broadcast!(new_state)
+    ReaderState.cast(&%{&1 | playing: playing})
+
+    broadcast!({:playing, playing})
 
     if playing do
       send(PlayerBroadcaster, :start)

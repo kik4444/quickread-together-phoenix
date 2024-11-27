@@ -6,7 +6,7 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
   """
   use GenServer
 
-  alias QuickreadTogether.State
+  alias QuickreadTogether.ReaderState
   alias QuickreadTogether.TextChunk
   alias QuickreadTogetherWeb.ReaderLive
 
@@ -19,11 +19,10 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
   @impl true
   def handle_info(:start, []) do
     # TODO chunk_size
-    parsed_chunks = TextChunk.parse(State.get(:raw_text))
+    parsed_chunks = TextChunk.parse(ReaderState.get(& &1.raw_text))
 
-    new_state = {:paused_in_play, true}
-    State.set(new_state)
-    ReaderLive.broadcast!(new_state)
+    ReaderState.cast(&%{&1 | paused_in_play: true})
+    ReaderLive.broadcast!({:paused_in_play, true})
 
     send(self(), :next_chunk)
 
@@ -44,7 +43,7 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
   def handle_info(:next_chunk, [%TextChunk{} = current_chunk | tail] = total_left) do
     ReaderLive.broadcast!({:update_chunk, current_chunk})
 
-    case State.get(:playing) do
+    case ReaderState.get(& &1.playing) do
       true ->
         # TODO words_per_minute
         Process.send_after(self(), :next_chunk, 300)
@@ -54,7 +53,7 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
       false ->
         # Save current chunk when pause is first observed
         # to sync it to newly-joined clients
-        State.set({:current_chunk, current_chunk.chunk})
+        ReaderState.cast(&%{&1 | current_chunk: current_chunk.chunk})
 
         {:noreply, total_left}
     end
@@ -63,8 +62,11 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
   # End of chunks to show.
   @impl true
   def handle_info(:next_chunk, []) do
-    for new_state <- [playing: false, paused_in_play: false] do
-      State.set(new_state)
+    changes = [playing: false, paused_in_play: false]
+
+    ReaderState.cast(&Map.merge(&1, Map.new(changes)))
+
+    for new_state <- changes do
       ReaderLive.broadcast!(new_state)
     end
 

@@ -8,7 +8,7 @@ defmodule QuickreadTogether.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      QuickreadTogether.State,
+      QuickreadTogether.ReaderState,
       QuickreadTogetherWeb.PlayerBroadcaster,
       QuickreadTogetherWeb.Telemetry,
       {Phoenix.PubSub, name: QuickreadTogether.PubSub},
