@@ -4,7 +4,7 @@ defmodule QuickreadTogether.ReaderState do
   """
   use Agent
 
-  defstruct raw_text: "Welcome to Quickread Together. Press start to begin reading quickly.",
+  defstruct raw_text: "Welcome to Quickread Together. Press play to begin reading quickly.",
             current_chunk: "Quickread Together",
             playing: false,
             textarea_locked: false,
