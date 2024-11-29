@@ -21,7 +21,9 @@ defmodule QuickreadTogetherWeb.ReaderLive do
        textarea: %{"raw_text" => state.raw_text},
        playing: state.playing,
        current_chunk: state.current_chunk,
-       textarea_locked: state.textarea_locked
+       textarea_locked: state.textarea_locked,
+       chunk_size: state.chunk_size,
+       words_per_minute: state.words_per_minute
      )}
   end
 

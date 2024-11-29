@@ -7,7 +7,9 @@ defmodule QuickreadTogether.ReaderState do
   defstruct raw_text: "Welcome to Quickread Together. Press start to begin reading quickly.",
             current_chunk: "Quickread Together",
             playing: false,
-            textarea_locked: false
+            textarea_locked: false,
+            chunk_size: 1,
+            words_per_minute: 300
 
   def start_link(_), do: Agent.start_link(fn -> %__MODULE__{} end, name: __MODULE__)
 

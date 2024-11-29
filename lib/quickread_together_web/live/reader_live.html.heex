@@ -18,7 +18,50 @@
     <%= @current_chunk %>
   </p>
 
-  <.button phx-click={if @playing, do: "pause_pressed", else: "play_pressed"} phx-throttle="250">
-    <%= if @playing, do: "Pause", else: "Play" %>
-  </.button>
+  <div id="controls" class="flex flex-col gap-2 place-items-center">
+    <div id="chunking" class="max-w-[95%] grid grid-flow-col gap-1 place-items-center">
+      <label>Words per minute:</label>
+      <input
+        type="number"
+        min="60"
+        max="1000"
+        step="10"
+        value={@words_per_minute}
+        class="w-[60pt]"
+      />
+
+      <label>Chunk size:</label>
+      <input type="number" min="1" max="10" value={@chunk_size} class="w-[45pt]" />
+
+      <.button>Reset</.button>
+    </div>
+
+    <div id="progress" class="flex gap-3">
+      <%!-- TODO --%>
+      <p>Chunk: X/Y</p>
+
+      <%!-- TODO Duration --%>
+      <p>Duration: TODO</p>
+      <%!-- TODO Progress range input --%>
+    </div>
+
+    <div id="playback" class="w-full px-5 grid grid-cols-3 gap-3">
+      <%!-- TODO make it work --%>
+      <.button>
+        Stop
+      </.button>
+
+      <%!-- TODO make it work --%>
+      <.button>
+        Restart
+      </.button>
+
+      <.button
+        phx-click={if @playing, do: "pause_pressed", else: "play_pressed"}
+        phx-throttle="250"
+      >
+        <%= if @playing, do: "Pause", else: "Play" %>
+      </.button>
+    </div>
+  </div>
 </main>
