@@ -59,7 +59,15 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   end
 
   def handle_info({:update_chunk, %TextChunk{} = parsed_chunk}, socket) do
-    # TODO select range in textarea
-    {:noreply, assign(socket, current_chunk: parsed_chunk.chunk)}
+    {:noreply,
+     assign(socket, current_chunk: parsed_chunk.chunk)
+     |> push_event("select_range", %{
+       start_offset: parsed_chunk.start_offset,
+       stop_offset: parsed_chunk.stop_offset
+     })}
+  end
+
+  def handle_info(:selection_blur, socket) do
+    {:noreply, push_event(socket, "selection_blur", %{})}
   end
 end

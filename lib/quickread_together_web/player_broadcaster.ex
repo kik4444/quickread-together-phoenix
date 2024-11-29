@@ -93,6 +93,8 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
       ReaderLive.broadcast!(new_state)
     end
 
+    ReaderLive.broadcast!(:selection_blur)
+
     {:noreply, []}
   end
 end
