@@ -22,8 +22,7 @@ defmodule QuickreadTogetherWeb.ReaderLive do
        playing: state.playing,
        current_chunk: state.current_chunk,
        textarea_locked: state.textarea_locked,
-       chunk_size: state.chunk_size,
-       words_per_minute: state.words_per_minute
+       controls: %{"words_per_minute" => state.words_per_minute, "chunk_size" => state.chunk_size}
      )}
   end
 
@@ -44,6 +43,22 @@ defmodule QuickreadTogetherWeb.ReaderLive do
 
   def handle_event("pause_pressed", _, socket) do
     send(PlayerBroadcaster, :pause)
+
+    {:noreply, socket}
+  end
+
+  def handle_event("wpm_changed", %{"words_per_minute" => wpm}, socket) do
+    {wpm, ""} = Integer.parse(wpm)
+
+    wpm =
+      cond do
+        wpm < 60 -> 60
+        wpm > 1000 -> 1000
+        true -> wpm
+      end
+
+    ReaderState.cast(&%{&1 | words_per_minute: wpm})
+    broadcast!({:wpm_changed, wpm})
 
     {:noreply, socket}
   end
@@ -71,5 +86,9 @@ defmodule QuickreadTogetherWeb.ReaderLive do
 
   def handle_info(:selection_blur, socket) do
     {:noreply, push_event(socket, "selection_blur", %{})}
+  end
+
+  def handle_info({:wpm_changed, wpm}, socket) do
+    {:noreply, assign(socket, controls: %{socket.assigns.controls | "words_per_minute" => wpm})}
   end
 end

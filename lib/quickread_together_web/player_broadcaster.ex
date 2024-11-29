@@ -10,6 +10,10 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
   alias QuickreadTogether.TextChunk
   alias QuickreadTogetherWeb.ReaderLive
 
+  # TODO use struct to hold your state:
+  # tuple of parsed text
+  # current index
+  # calculated speed
   def start_link(_), do: GenServer.start_link(__MODULE__, [], name: __MODULE__)
 
   @impl true
@@ -26,8 +30,9 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
       ReaderLive.broadcast!(new_state)
     end
 
-    # TODO chunk_size
-    parsed_chunks = TextChunk.parse(ReaderState.get(& &1.raw_text))
+    # TODO variable chunk_size in runtime
+    {raw_text, chunk_size} = ReaderState.get(&{&1.raw_text, &1.chunk_size})
+    parsed_chunks = TextChunk.parse(raw_text, chunk_size)
 
     send(self(), :next_chunk)
 
@@ -66,10 +71,15 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
   def handle_info(:next_chunk, [%TextChunk{} = current_chunk | tail] = total_left) do
     ReaderLive.broadcast!({:update_chunk, current_chunk})
 
-    case ReaderState.get(& &1.playing) do
+    {playing, chunk_size, wpm} =
+      ReaderState.get(&{&1.playing, &1.chunk_size, &1.words_per_minute})
+
+    speed = (1000 / (wpm / 60) * chunk_size) |> floor()
+
+    case playing do
       true ->
         # TODO words_per_minute
-        Process.send_after(self(), :next_chunk, 300)
+        Process.send_after(self(), :next_chunk, speed)
 
         {:noreply, tail}
 

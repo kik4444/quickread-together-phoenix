@@ -20,18 +20,32 @@
 
   <div id="controls" class="flex flex-col gap-2 place-items-center">
     <div id="chunking" class="max-w-[95%] grid grid-flow-col gap-1 place-items-center">
-      <label>Words per minute:</label>
-      <input
-        type="number"
-        min="60"
-        max="1000"
-        step="10"
-        value={@words_per_minute}
-        class="w-[60pt]"
-      />
+      <label class="text-center">Words per minute</label>
+      <.form for={@controls} phx-change="wpm_changed">
+        <input
+          type="number"
+          min="60"
+          max="1000"
+          step="10"
+          name="words_per_minute"
+          value={@controls["words_per_minute"]}
+          phx-debouce="250"
+          class="w-[60pt]"
+        />
+      </.form>
 
-      <label>Chunk size:</label>
-      <input type="number" min="1" max="10" value={@chunk_size} class="w-[45pt]" />
+      <label class="text-center">Chunk size</label>
+      <.form for={@controls} phx-change="chunk_size_changed">
+        <input
+          type="number"
+          min="1"
+          max="10"
+          name="chunk_size"
+          value={@controls["chunk_size"]}
+          phx-debouce="250"
+          class="w-[45pt]"
+        />
+      </.form>
 
       <.button>Reset</.button>
     </div>
