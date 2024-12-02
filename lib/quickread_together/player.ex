@@ -20,6 +20,7 @@ defmodule QuickreadTogether.Player do
   def play(), do: GenServer.cast(__MODULE__, :play)
   def pause(), do: GenServer.cast(__MODULE__, :pause)
   def restart(), do: GenServer.cast(__MODULE__, :restart)
+  def stop(), do: GenServer.cast(__MODULE__, :stop)
   def cast(args) when is_tuple(args), do: GenServer.cast(__MODULE__, args)
 
   # --- SERVER STATE ---
@@ -69,6 +70,23 @@ defmodule QuickreadTogether.Player do
   # Restart from the beginning.
   @impl true
   def handle_cast(:restart, %PlayerState{} = state), do: {:noreply, %{state | current_index: 0}}
+
+  # Stop
+  # TODO abstract away all these common actions
+  @impl true
+  def handle_cast(:stop, %PlayerState{} = state) do
+    changes = [playing: false, textarea_locked: false]
+
+    state = Map.merge(state, Map.new(changes))
+
+    for new_state <- changes do
+      ReaderLive.broadcast!(new_state)
+    end
+
+    ReaderLive.broadcast!({:update_chunk, elem(state.parsed_text, 0)})
+
+    {:noreply, %{state | current_index: 0}}
+  end
 
   # Resume from pause.
   @impl true

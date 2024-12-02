@@ -63,6 +63,12 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {:noreply, socket}
   end
 
+  def handle_event("stop_pressed", _, socket) do
+    Player.stop()
+
+    {:noreply, socket}
+  end
+
   # Ignore empty input
   def handle_event("wpm_changed", %{"words_per_minute" => wpm}, socket) when wpm == "" do
     {:noreply, socket}
