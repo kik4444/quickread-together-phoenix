@@ -81,12 +81,12 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {:noreply, assign(socket, [new_state])}
   end
 
-  def handle_info({:update_chunk, %TextChunk{} = parsed_chunk}, socket) do
+  def handle_info({:update_chunk, %TextChunk{} = text_chunk}, socket) do
     {:noreply,
-     assign(socket, current_chunk: parsed_chunk.chunk)
+     assign(socket, current_chunk: text_chunk.chunk)
      |> push_event("select_range", %{
-       start_offset: parsed_chunk.start_offset,
-       stop_offset: parsed_chunk.stop_offset
+       start_offset: text_chunk.start_offset,
+       stop_offset: text_chunk.stop_offset
      })}
   end
 
