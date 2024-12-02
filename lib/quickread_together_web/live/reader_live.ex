@@ -1,9 +1,9 @@
 defmodule QuickreadTogetherWeb.ReaderLive do
   use QuickreadTogetherWeb, :live_view
 
-  alias QuickreadTogether.ReaderState
+  alias QuickreadTogether.Player
+  alias QuickreadTogether.PlayerState
   alias QuickreadTogether.TextChunk
-  alias QuickreadTogetherWeb.PlayerBroadcaster
 
   def broadcast!(msg) do
     Phoenix.PubSub.broadcast!(QuickreadTogether.PubSub, "reader:main", msg)
@@ -14,21 +14,23 @@ defmodule QuickreadTogetherWeb.ReaderLive do
       Phoenix.PubSub.subscribe(QuickreadTogether.PubSub, "reader:main")
     end
 
-    %ReaderState{} = state = ReaderState.get(& &1)
+    %PlayerState{} = state = Player.get(& &1)
 
     {:ok,
      assign(socket,
        textarea: %{"raw_text" => state.raw_text},
        playing: state.playing,
-       current_chunk: state.current_chunk,
+       current_chunk: elem(state.parsed_text, state.current_index).chunk,
        textarea_locked: state.textarea_locked,
        controls: %{"words_per_minute" => state.words_per_minute, "chunk_size" => state.chunk_size}
      )}
   end
 
   def handle_event("text_changed", %{"raw_text" => new_text}, socket) do
-    with false <- ReaderState.get(& &1.textarea_locked) do
-      ReaderState.cast(&%{&1 | raw_text: new_text})
+    # Due to client latency, one client may send a text_changed event
+    # after we've started playing, so we must ignore it.
+    with false <- Player.get(& &1.textarea_locked) do
+      Player.set(&%{&1 | raw_text: new_text})
       broadcast!({:new_text, new_text})
     end
 
@@ -36,13 +38,13 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   end
 
   def handle_event("play_pressed", _, socket) do
-    send(PlayerBroadcaster, :play)
+    Player.play()
 
     {:noreply, socket}
   end
 
   def handle_event("pause_pressed", _, socket) do
-    send(PlayerBroadcaster, :pause)
+    Player.pause()
 
     {:noreply, socket}
   end
@@ -62,8 +64,8 @@ defmodule QuickreadTogetherWeb.ReaderLive do
         true -> wpm
       end
 
-    ReaderState.cast(&%{&1 | words_per_minute: wpm})
-    send(PlayerBroadcaster, :wpm_changed)
+    Player.cast({:wpm_changed, wpm})
+
     broadcast!({:wpm_changed, wpm})
 
     {:noreply, socket}
