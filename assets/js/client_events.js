@@ -1,6 +1,8 @@
 /** @type {HTMLTextAreaElement} */
 const textarea = document.querySelector("#textarea");
 
+window.addEventListener("phx:new_text", e => textarea.value = e.detail.new_text);
+
 window.addEventListener("phx:select_range", e => {
     // We must focus the textarea otherwise the highlight is not visible.
     textarea.focus();
