@@ -47,6 +47,11 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {:noreply, socket}
   end
 
+  # User entered empty input
+  def handle_event("wpm_changed", %{"words_per_minute" => wpm}, socket) when wpm == "" do
+    {:noreply, socket}
+  end
+
   def handle_event("wpm_changed", %{"words_per_minute" => wpm}, socket) do
     {wpm, ""} = Integer.parse(wpm)
 
