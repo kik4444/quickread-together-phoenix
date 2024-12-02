@@ -1,9 +1,5 @@
 <main class="h-screen w-screen grid place-items-center">
-  <.form
-    for={@textarea}
-    phx-change="text_changed"
-    class="w-full min-h-[50%] grid place-items-center"
-  >
+  <.form for={@textarea} phx-change="text_changed" class="w-full min-h-[50%] grid place-items-center">
     <textarea
       id="textarea"
       placeholder="Enter text to read quickly."
@@ -70,10 +66,7 @@
         Restart
       </.button>
 
-      <.button
-        phx-click={if @playing, do: "pause_pressed", else: "play_pressed"}
-        phx-throttle="250"
-      >
+      <.button phx-click={if @playing, do: "pause_pressed", else: "play_pressed"} phx-throttle="250">
         <%= if @playing, do: "Pause", else: "Play" %>
       </.button>
     </div>

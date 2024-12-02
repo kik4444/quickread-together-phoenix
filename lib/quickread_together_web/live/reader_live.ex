@@ -28,8 +28,7 @@ defmodule QuickreadTogetherWeb.ReaderLive do
      assign(socket,
        textarea: %{"raw_text" => state.raw_text},
        playing: state.playing,
-       current_chunk:
-         elem(state.parsed_text, clamp(state.current_index, 0, tuple_size(state.parsed_text) - 1)).chunk,
+       current_chunk: elem(state.parsed_text, clamp(state.current_index, 0, tuple_size(state.parsed_text) - 1)).chunk,
        textarea_locked: state.textarea_locked,
        controls: %{"words_per_minute" => state.words_per_minute, "chunk_size" => state.chunk_size}
      )}
