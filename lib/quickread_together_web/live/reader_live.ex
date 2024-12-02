@@ -58,6 +58,7 @@ defmodule QuickreadTogetherWeb.ReaderLive do
       end
 
     ReaderState.cast(&%{&1 | words_per_minute: wpm})
+    send(PlayerBroadcaster, :wpm_changed)
     broadcast!({:wpm_changed, wpm})
 
     {:noreply, socket}

@@ -116,4 +116,12 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
 
     {:noreply, %{state | current_index: state.current_index + 1}}
   end
+
+  @impl true
+  def handle_info(:wpm_changed, %__MODULE__{} = state) do
+    # TODO this is getting ugly. Find a better way rather than getting ReaderState every time
+    {wpm, chunk_size} = ReaderState.get(&{&1.words_per_minute, &1.chunk_size})
+
+    {:noreply, %{state | speed: calculate_speed(wpm, chunk_size)}}
+  end
 end
