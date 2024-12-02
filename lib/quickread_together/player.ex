@@ -110,9 +110,17 @@ defmodule QuickreadTogether.Player do
     {:noreply, %{state | current_index: current_index + 1}}
   end
 
-  # Do nothing when paused.
+  # When paused, display the current chunk anyway.
+  # This is to avoid a desync when you pause, then refresh
+  # and suddenly see the next chunk.
   @impl true
-  def handle_info(:next_chunk, %PlayerState{playing: false} = state), do: {:noreply, state}
+  def handle_info(:next_chunk, %PlayerState{playing: false} = state) do
+    %TextChunk{} = text_chunk = elem(state.parsed_text, state.current_index)
+
+    ReaderLive.broadcast!({:update_chunk, text_chunk})
+
+    {:noreply, state}
+  end
 
   # Playback ended or user seeked beyond end.
   @impl true
