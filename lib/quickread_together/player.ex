@@ -19,6 +19,7 @@ defmodule QuickreadTogether.Player do
 
   def play(), do: GenServer.cast(__MODULE__, :play)
   def pause(), do: GenServer.cast(__MODULE__, :pause)
+  def restart(), do: GenServer.cast(__MODULE__, :restart)
   def cast(args) when is_tuple(args), do: GenServer.cast(__MODULE__, args)
 
   # --- SERVER STATE ---
@@ -64,6 +65,10 @@ defmodule QuickreadTogether.Player do
   # Ignore invalid pause events due to client latency.
   @impl true
   def handle_cast(:pause, state), do: {:noreply, state}
+
+  # Restart from the beginning.
+  @impl true
+  def handle_cast(:restart, %PlayerState{} = state), do: {:noreply, %{state | current_index: 0}}
 
   # Resume from pause.
   @impl true
