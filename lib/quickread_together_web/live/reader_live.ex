@@ -73,6 +73,22 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {:noreply, socket}
   end
 
+  # Ignore empty input
+  def handle_event("chunk_size_changed", %{"chunk_size" => chunk_size}, socket) when chunk_size == "" do
+    {:noreply, socket}
+  end
+
+  def handle_event("chunk_size_changed", %{"chunk_size" => chunk_size}, socket) do
+    {chunk_size, ""} = Integer.parse(chunk_size)
+    chunk_size = clamp(chunk_size, 1, 10)
+
+    Player.cast({:chunk_size_changed, chunk_size})
+
+    broadcast!({:chunk_size_changed, chunk_size})
+
+    {:noreply, socket}
+  end
+
   def handle_info({:new_text, new_text}, socket) do
     {:noreply, push_event(socket, "new_text", %{new_text: new_text})}
   end
@@ -100,5 +116,9 @@ defmodule QuickreadTogetherWeb.ReaderLive do
 
   def handle_info({:wpm_changed, wpm}, socket) do
     {:noreply, assign(socket, controls: %{socket.assigns.controls | "words_per_minute" => wpm})}
+  end
+
+  def handle_info({:chunk_size_changed, chunk_size}, socket) do
+    {:noreply, assign(socket, controls: %{socket.assigns.controls | "chunk_size" => chunk_size})}
   end
 end

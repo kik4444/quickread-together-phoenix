@@ -86,7 +86,21 @@ defmodule QuickreadTogether.Player do
   end
 
   # chunk_size changed
-  # TODO
+  def handle_cast({:chunk_size_changed, new_chunk_size}, %PlayerState{} = state) do
+    # Recalculate what the new chunk index should be after recreating the text chunks with a different size
+    new_index = (state.current_index * state.chunk_size / new_chunk_size) |> floor()
+
+    new_parsed_text = TextChunk.parse(state.raw_text, new_chunk_size)
+
+    {:noreply,
+     %{
+       state
+       | parsed_text: new_parsed_text,
+         current_index: new_index,
+         chunk_size: new_chunk_size,
+         speed: calculate_speed(state.words_per_minute, new_chunk_size)
+     }}
+  end
 
   # Display current chunk and move to the next.
   @impl true
