@@ -5,6 +5,14 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   alias QuickreadTogether.PlayerState
   alias QuickreadTogether.TextChunk
 
+  defp clamp(value, min, max) when is_number(value) and is_number(min) and is_number(max) do
+    cond do
+      value < min -> min
+      value > max -> max
+      true -> value
+    end
+  end
+
   def broadcast!(msg) do
     Phoenix.PubSub.broadcast!(QuickreadTogether.PubSub, "reader:main", msg)
   end
@@ -49,20 +57,14 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {:noreply, socket}
   end
 
-  # User entered empty input
+  # Ignore empty input
   def handle_event("wpm_changed", %{"words_per_minute" => wpm}, socket) when wpm == "" do
     {:noreply, socket}
   end
 
   def handle_event("wpm_changed", %{"words_per_minute" => wpm}, socket) do
     {wpm, ""} = Integer.parse(wpm)
-
-    wpm =
-      cond do
-        wpm < 60 -> 60
-        wpm > 1000 -> 1000
-        true -> wpm
-      end
+    wpm = clamp(wpm, 60, 1000)
 
     Player.cast({:wpm_changed, wpm})
 
