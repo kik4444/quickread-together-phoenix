@@ -3,16 +3,16 @@ defmodule QuickreadTogether.TextChunkTest do
   alias QuickreadTogether.TextChunk
 
   test "empty input" do
-    assert TextChunk.parse("", 1) == [%TextChunk{}]
+    assert TextChunk.parse("", 1) == {%TextChunk{}}
   end
 
   test "only whitespace" do
-    assert TextChunk.parse("  \n\n\n  　\n") == [%TextChunk{}]
+    assert TextChunk.parse("  \n\n\n  　\n") == {%TextChunk{}}
   end
 
   test "one chunk" do
     assert TextChunk.parse(~s(Welcome to "Quick Reader". Press start to begin reading quickly.)) ==
-             [
+             {
                %TextChunk{
                  chunk: "Welcome",
                  start_offset: 0,
@@ -63,7 +63,7 @@ defmodule QuickreadTogether.TextChunkTest do
                  start_offset: 56,
                  stop_offset: 64
                }
-             ]
+             }
   end
 
   test "two chunks" do
@@ -73,7 +73,7 @@ defmodule QuickreadTogether.TextChunkTest do
         2
       )
 
-    assert parsed == [
+    assert parsed == {
              %TextChunk{
                chunk: "Welcome to",
                start_offset: 0,
@@ -99,11 +99,11 @@ defmodule QuickreadTogether.TextChunkTest do
                start_offset: 48,
                stop_offset: 64
              }
-           ]
+           }
   end
 
   test "mixed unicode" do
-    assert TextChunk.parse("こんにちは world и　皆さん") == [
+    assert TextChunk.parse("こんにちは world и　皆さん") == {
              %TextChunk{
                chunk: "こんにちは",
                start_offset: 0,
@@ -124,11 +124,11 @@ defmodule QuickreadTogether.TextChunkTest do
                start_offset: 14,
                stop_offset: 17
              }
-           ]
+           }
   end
 
   test "two-chunk mixed unicode" do
-    assert TextChunk.parse("こんにちは world и　皆さん", 2) == [
+    assert TextChunk.parse("こんにちは world и　皆さん", 2) == {
              %TextChunk{
                chunk: "こんにちは world",
                start_offset: 0,
@@ -139,11 +139,11 @@ defmodule QuickreadTogether.TextChunkTest do
                start_offset: 12,
                stop_offset: 17
              }
-           ]
+           }
   end
 
   test "three-chunk mixed unicode" do
-    assert TextChunk.parse("こんにちは world и　皆さん", 3) == [
+    assert TextChunk.parse("こんにちは world и　皆さん", 3) == {
              %TextChunk{
                chunk: "こんにちは world и",
                start_offset: 0,
@@ -154,11 +154,11 @@ defmodule QuickreadTogether.TextChunkTest do
                start_offset: 14,
                stop_offset: 17
              }
-           ]
+           }
   end
 
   test "unicode with newlines" do
-    assert TextChunk.parse("こんにちは world и　皆さん\n\n and ! everyone else") == [
+    assert TextChunk.parse("こんにちは world и　皆さん\n\n and ! everyone else") == {
              %TextChunk{
                chunk: "こんにちは",
                start_offset: 0,
@@ -199,6 +199,6 @@ defmodule QuickreadTogether.TextChunkTest do
                start_offset: 35,
                stop_offset: 39
              }
-           ]
+           }
   end
 end

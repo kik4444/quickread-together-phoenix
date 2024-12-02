@@ -7,10 +7,10 @@ defmodule QuickreadTogether.TextChunk do
 
   defstruct chunk: "", start_offset: 0, stop_offset: 0
 
-  @spec parse(binary(), pos_integer()) :: [__MODULE__.t()]
+  @spec parse(binary(), pos_integer()) :: tuple()
   def parse(text, chunk_size \\ 1)
 
-  def parse("", _), do: [%__MODULE__{}]
+  def parse("", _), do: {%__MODULE__{}}
 
   def parse(text, chunk_size) when is_binary(text) and chunk_size in 1..10 do
     String.graphemes(text)
@@ -38,6 +38,7 @@ defmodule QuickreadTogether.TextChunk do
         }
       end)
     end)
+    |> List.to_tuple()
   end
 
   defp split(char, [{start, stop, index, prev_whitespace} | tail] = acc) do

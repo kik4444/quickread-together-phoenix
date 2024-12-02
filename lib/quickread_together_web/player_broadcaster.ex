@@ -10,19 +10,26 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
   alias QuickreadTogether.TextChunk
   alias QuickreadTogetherWeb.ReaderLive
 
-  # TODO use struct to hold your state:
-  # tuple of parsed text
-  # current index
-  # calculated speed
-  def start_link(_), do: GenServer.start_link(__MODULE__, [], name: __MODULE__)
+  @derive {Inspect, except: [:parsed_text]}
+  defstruct parsed_text: {%TextChunk{}},
+            current_index: 0,
+            speed: nil
+
+  def start_link(_), do: GenServer.start_link(__MODULE__, %__MODULE__{}, name: __MODULE__)
 
   @impl true
   def init(init), do: {:ok, init}
 
+  defp calculate_speed(words_per_minute, chunk_size)
+       when is_integer(words_per_minute) and is_integer(chunk_size) do
+    (1000 / (words_per_minute / 60) * chunk_size) |> floor()
+  end
+
   # Clean start.
+  # 0 and nil are interpreted as starting from the beginning.
   @impl true
-  def handle_info(:play, []) do
-    changes = Keyword.from_keys([:playing, :textarea_locked], true)
+  def handle_info(:play, %__MODULE__{current_index: 0, speed: nil}) do
+    changes = [playing: true, textarea_locked: true]
 
     ReaderState.cast(&Map.merge(&1, Map.new(changes)))
 
@@ -31,28 +38,36 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
     end
 
     # TODO variable chunk_size in runtime
-    {raw_text, chunk_size} = ReaderState.get(&{&1.raw_text, &1.chunk_size})
-    parsed_chunks = TextChunk.parse(raw_text, chunk_size)
+    {raw_text, wpm, chunk_size} =
+      ReaderState.get(&{&1.raw_text, &1.words_per_minute, &1.chunk_size})
+
+    parsed_text = TextChunk.parse(raw_text, chunk_size)
+    speed = calculate_speed(wpm, chunk_size)
 
     send(self(), :next_chunk)
 
-    {:noreply, parsed_chunks}
+    {:noreply, %__MODULE__{parsed_text: parsed_text, current_index: 0, speed: speed}}
   end
 
   # Pause during play
   @impl true
-  def handle_info(:pause, state) do
+  def handle_info(:pause, %__MODULE__{} = state) do
     with true <- ReaderState.get(& &1.playing) do
-      ReaderState.cast(&%{&1 | playing: false})
+      %TextChunk{} = current_chunk = elem(state.parsed_text, state.current_index)
+
+      # Save current chunk when pause is first observed
+      # to sync it to newly-joined clients.
+      ReaderState.cast(&%{&1 | playing: false, current_chunk: current_chunk.chunk})
+
       ReaderLive.broadcast!({:playing, false})
     end
 
-    {:noreply, state}
+    {:noreply, %{state | speed: nil}}
   end
 
   # Resume from pause.
   @impl true
-  def handle_info(:play, [%TextChunk{} | _] = total_left) do
+  def handle_info(:play, %__MODULE__{current_index: n, speed: nil} = state) when n > 0 do
     # Due to client latency, it's possible we may get a resume signal while we're already playing,
     # so we should check that to avoid jumping over a chunk too quickly.
     with false <- ReaderState.get(& &1.playing) do
@@ -62,39 +77,21 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
       send(self(), :next_chunk)
     end
 
-    {:noreply, total_left}
+    {wpm, chunk_size} = ReaderState.get(&{&1.words_per_minute, &1.chunk_size})
+
+    speed = calculate_speed(wpm, chunk_size)
+
+    {:noreply, %{state | speed: speed}}
   end
 
-  # Move to the next chunk.
-  # If paused, save current chunk.
+  # Do nothing when next_chunk is called while paused.
   @impl true
-  def handle_info(:next_chunk, [%TextChunk{} = current_chunk | tail] = total_left) do
-    ReaderLive.broadcast!({:update_chunk, current_chunk})
-
-    {playing, chunk_size, wpm} =
-      ReaderState.get(&{&1.playing, &1.chunk_size, &1.words_per_minute})
-
-    speed = (1000 / (wpm / 60) * chunk_size) |> floor()
-
-    case playing do
-      true ->
-        # TODO words_per_minute
-        Process.send_after(self(), :next_chunk, speed)
-
-        {:noreply, tail}
-
-      false ->
-        # Save current chunk when pause is first observed
-        # to sync it to newly-joined clients.
-        ReaderState.cast(&%{&1 | current_chunk: current_chunk.chunk})
-
-        {:noreply, total_left}
-    end
-  end
+  def handle_info(:next_chunk, %__MODULE__{speed: nil} = state), do: {:noreply, state}
 
   # End of chunks to show.
   @impl true
-  def handle_info(:next_chunk, []) do
+  def handle_info(:next_chunk, %__MODULE__{parsed_text: parsed_text, current_index: n} = state)
+      when n >= tuple_size(parsed_text) do
     changes = [playing: false, textarea_locked: false]
 
     ReaderState.cast(&Map.merge(&1, Map.new(changes)))
@@ -105,6 +102,18 @@ defmodule QuickreadTogetherWeb.PlayerBroadcaster do
 
     ReaderLive.broadcast!(:selection_blur)
 
-    {:noreply, []}
+    {:noreply, %{state | current_index: 0, speed: nil}}
+  end
+
+  # Move to the next chunk.
+  @impl true
+  def handle_info(:next_chunk, %__MODULE__{speed: speed} = state) do
+    %TextChunk{} = current_chunk = elem(state.parsed_text, state.current_index)
+
+    ReaderLive.broadcast!({:update_chunk, current_chunk})
+
+    Process.send_after(self(), :next_chunk, speed)
+
+    {:noreply, %{state | current_index: state.current_index + 1}}
   end
 end
