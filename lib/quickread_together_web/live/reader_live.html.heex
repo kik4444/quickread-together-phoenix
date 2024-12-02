@@ -11,7 +11,7 @@
   </.form>
 
   <p id="display" class="font-semibold text-xl antialiased">
-    <%= @current_chunk %>
+    <%= if @current_chunk == "", do: "Quickread Together", else: @current_chunk %>
   </p>
 
   <div id="controls" class="flex flex-col gap-2 place-items-center">
