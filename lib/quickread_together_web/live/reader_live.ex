@@ -101,6 +101,11 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {:noreply, socket}
   end
 
+  # Change multiple fields that are common between ReaderLive and PlayerState
+  def handle_info({:multiple_assigns_changes, changes}, socket) when is_list(changes) do
+    {:noreply, assign(socket, changes)}
+  end
+
   def handle_info({:new_text, new_text}, socket) do
     {:noreply, push_event(socket, "new_text", %{new_text: new_text})}
   end

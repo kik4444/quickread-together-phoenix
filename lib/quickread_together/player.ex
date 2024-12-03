@@ -12,6 +12,14 @@ defmodule QuickreadTogether.Player do
     (1000 / (words_per_minute / 60) * chunk_size) |> floor()
   end
 
+  # Modify fields that are common to PlayerState and ReaderLive
+  # and broadcast them
+  defp common_changes!(%PlayerState{} = state, changes) when is_list(changes) do
+    ReaderLive.broadcast!({:multiple_assigns_changes, changes})
+
+    Map.merge(state, Map.new(changes))
+  end
+
   # --- CLIENT ---
   def get(fun) when is_function(fun, 1), do: GenServer.call(__MODULE__, {:get, fun}, :infinity)
 
@@ -38,14 +46,7 @@ defmodule QuickreadTogether.Player do
   # Initial start.
   @impl true
   def handle_cast(:play, %PlayerState{playing: false, textarea_locked: false} = state) do
-    # TODO better way to do this?
-    changes = [playing: true, textarea_locked: true]
-
-    state = Map.merge(state, Map.new(changes))
-
-    for new_state <- changes do
-      ReaderLive.broadcast!(new_state)
-    end
+    state = common_changes!(state, playing: true, textarea_locked: true)
 
     parsed_text = TextChunk.parse(state.raw_text, state.chunk_size)
     speed = calculate_speed(state.words_per_minute, state.chunk_size)
@@ -85,17 +86,10 @@ defmodule QuickreadTogether.Player do
   @impl true
   def handle_cast(:restart, %PlayerState{} = state), do: {:noreply, %{state | current_index: 0}}
 
-  # Stop
-  # TODO abstract away all these common actions
+  # Stop and restart.
   @impl true
   def handle_cast(:stop, %PlayerState{} = state) do
-    changes = [playing: false, textarea_locked: false]
-
-    state = Map.merge(state, Map.new(changes))
-
-    for new_state <- changes do
-      ReaderLive.broadcast!(new_state)
-    end
+    state = common_changes!(state, playing: false, textarea_locked: false)
 
     ReaderLive.broadcast!({:update_chunk, elem(state.parsed_text, 0)})
 
@@ -171,13 +165,7 @@ defmodule QuickreadTogether.Player do
         } = state
       )
       when current_index >= tuple_size(parsed_text) do
-    changes = [playing: false, textarea_locked: false]
-
-    state = Map.merge(state, Map.new(changes))
-
-    for new_state <- changes do
-      ReaderLive.broadcast!(new_state)
-    end
+    state = common_changes!(state, playing: false, textarea_locked: false)
 
     ReaderLive.broadcast!(:selection_blur)
 
