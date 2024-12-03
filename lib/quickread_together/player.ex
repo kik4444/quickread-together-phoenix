@@ -17,14 +17,6 @@ defmodule QuickreadTogether.Player do
     (current_index * chunk_size) |> div(new_chunk_size)
   end
 
-  # Modify fields that are common to PlayerState and ReaderLive
-  # and broadcast them
-  defp common_changes!(%PlayerState{} = state, changes) when is_list(changes) do
-    ReaderLive.broadcast!({:multiple_assigns_changes, changes})
-
-    Map.merge(state, Map.new(changes))
-  end
-
   # --- CLIENT ---
   def get(fun) when is_function(fun, 1), do: GenServer.call(__MODULE__, {:get, fun}, :infinity)
 
@@ -53,14 +45,15 @@ defmodule QuickreadTogether.Player do
   # Initial start.
   @impl true
   def handle_cast(:play, %PlayerState{playing: false, textarea_locked: false} = state) do
-    state = common_changes!(state, playing: true, textarea_locked: true)
+    ReaderLive.broadcast!({:multiple_assigns_changes, [playing: true, textarea_locked: true]})
 
     parsed_text = TextChunk.parse(state.raw_text, state.chunk_size)
     speed = calculate_speed(state.words_per_minute, state.chunk_size)
 
     send(self(), :next_chunk)
 
-    {:noreply, %{state | parsed_text: parsed_text, current_index: 0, speed: speed}}
+    {:noreply,
+     %{state | parsed_text: parsed_text, current_index: 0, speed: speed, playing: true, textarea_locked: true}}
   end
 
   # Resume from pause.
@@ -96,11 +89,11 @@ defmodule QuickreadTogether.Player do
   # Stop and restart.
   @impl true
   def handle_cast(:stop, %PlayerState{} = state) do
-    state = common_changes!(state, playing: false, textarea_locked: false)
+    ReaderLive.broadcast!({:multiple_assigns_changes, [playing: false, textarea_locked: false]})
 
     ReaderLive.broadcast!({:update_chunk, elem(state.parsed_text, 0)})
 
-    {:noreply, %{state | current_index: 0}}
+    {:noreply, %{state | current_index: 0, playing: false, textarea_locked: false}}
   end
 
   # words_per_minute changed
@@ -195,10 +188,10 @@ defmodule QuickreadTogether.Player do
         } = state
       )
       when current_index >= tuple_size(parsed_text) do
-    state = common_changes!(state, playing: false, textarea_locked: false)
+    ReaderLive.broadcast!({:multiple_assigns_changes, [playing: false, textarea_locked: false]})
 
     ReaderLive.broadcast!(:selection_blur)
 
-    {:noreply, %{state | current_index: tuple_size(parsed_text) - 1}}
+    {:noreply, %{state | current_index: tuple_size(parsed_text) - 1, playing: false, textarea_locked: false}}
   end
 end
