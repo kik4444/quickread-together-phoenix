@@ -55,6 +55,20 @@ defmodule QuickreadTogether.Player do
     {:noreply, %{state | parsed_text: parsed_text, current_index: 0, speed: speed}}
   end
 
+  # Resume from pause.
+  @impl true
+  def handle_cast(:play, %PlayerState{playing: false, textarea_locked: true} = state) do
+    ReaderLive.broadcast!({:playing, true})
+
+    send(self(), :next_chunk)
+
+    {:noreply, %{state | playing: true}}
+  end
+
+  # Ignore invalid resume events due to client latency.
+  @impl true
+  def handle_cast(:play, state), do: {:noreply, state}
+
   # Pause during play.
   @impl true
   def handle_cast(:pause, %PlayerState{playing: true, textarea_locked: true} = state) do
@@ -88,20 +102,6 @@ defmodule QuickreadTogether.Player do
     {:noreply, %{state | current_index: 0}}
   end
 
-  # Resume from pause.
-  @impl true
-  def handle_cast(:play, %PlayerState{playing: false, textarea_locked: true} = state) do
-    ReaderLive.broadcast!({:playing, true})
-
-    send(self(), :next_chunk)
-
-    {:noreply, %{state | playing: true}}
-  end
-
-  # Ignore invalid resume events due to client latency.
-  @impl true
-  def handle_cast(:play, state), do: {:noreply, state}
-
   # words_per_minute changed
   @impl true
   def handle_cast({:wpm_changed, new_wpm}, %PlayerState{chunk_size: chunk_size} = state) do
@@ -115,13 +115,15 @@ defmodule QuickreadTogether.Player do
 
     new_parsed_text = TextChunk.parse(state.raw_text, new_chunk_size)
 
+    new_speed = calculate_speed(state.words_per_minute, new_chunk_size)
+
     {:noreply,
      %{
        state
        | parsed_text: new_parsed_text,
          current_index: new_index,
          chunk_size: new_chunk_size,
-         speed: calculate_speed(state.words_per_minute, new_chunk_size)
+         speed: new_speed
      }}
   end
 
@@ -171,13 +173,13 @@ defmodule QuickreadTogether.Player do
       when current_index >= tuple_size(parsed_text) do
     changes = [playing: false, textarea_locked: false]
 
+    state = Map.merge(state, Map.new(changes))
+
     for new_state <- changes do
       ReaderLive.broadcast!(new_state)
     end
 
     ReaderLive.broadcast!(:selection_blur)
-
-    state = Map.merge(state, Map.new(changes))
 
     {:noreply, %{state | current_index: tuple_size(parsed_text) - 1}}
   end
