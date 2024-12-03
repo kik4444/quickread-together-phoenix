@@ -12,6 +12,11 @@ defmodule QuickreadTogether.Player do
     (1000 / (words_per_minute / 60) * chunk_size) |> floor()
   end
 
+  defp recalculate_index(current_index, chunk_size, new_chunk_size)
+       when is_integer(current_index) and is_integer(chunk_size) and is_integer(new_chunk_size) do
+    (current_index * chunk_size) |> div(new_chunk_size)
+  end
+
   # Modify fields that are common to PlayerState and ReaderLive
   # and broadcast them
   defp common_changes!(%PlayerState{} = state, changes) when is_list(changes) do
@@ -29,7 +34,9 @@ defmodule QuickreadTogether.Player do
   def pause(), do: GenServer.cast(__MODULE__, :pause)
   def restart(), do: GenServer.cast(__MODULE__, :restart)
   def stop(), do: GenServer.cast(__MODULE__, :stop)
-  def cast(args) when is_tuple(args), do: GenServer.cast(__MODULE__, args)
+  def new_words_per_minute(wpm) when is_integer(wpm), do: GenServer.cast(__MODULE__, {:wpm_changed, wpm})
+  def new_chunk_size(cs) when is_integer(cs), do: GenServer.cast(__MODULE__, {:chunk_size_changed, cs})
+  def controls_reset(), do: GenServer.cast(__MODULE__, :controls_reset)
 
   # --- SERVER STATE ---
   @impl true
@@ -105,7 +112,7 @@ defmodule QuickreadTogether.Player do
   # chunk_size changed
   def handle_cast({:chunk_size_changed, new_chunk_size}, %PlayerState{} = state) do
     # Recalculate what the new chunk index should be after recreating the text chunks with a different size
-    new_index = (state.current_index * state.chunk_size / new_chunk_size) |> floor()
+    new_index = recalculate_index(state.current_index, state.current_index, new_chunk_size)
 
     new_parsed_text = TextChunk.parse(state.raw_text, new_chunk_size)
 
@@ -119,6 +126,29 @@ defmodule QuickreadTogether.Player do
          chunk_size: new_chunk_size,
          speed: new_speed
      }}
+  end
+
+  def handle_cast(:controls_reset, %PlayerState{} = state) do
+    for new_state <- [wpm_changed: 300, chunk_size_changed: 1] do
+      ReaderLive.broadcast!(new_state)
+    end
+
+    speed =
+      if state.words_per_minute != 300 or state.chunk_size != 1 do
+        calculate_speed(300, 1)
+      else
+        state.speed
+      end
+
+    {parsed_text, index} =
+      if state.chunk_size != 1 do
+        {TextChunk.parse(state.raw_text), recalculate_index(state.current_index, state.chunk_size, 1)}
+      else
+        {state.parsed_text, state.current_index}
+      end
+
+    {:noreply,
+     %{state | parsed_text: parsed_text, current_index: index, words_per_minute: 300, chunk_size: 1, speed: speed}}
   end
 
   # Display current chunk and move to the next.

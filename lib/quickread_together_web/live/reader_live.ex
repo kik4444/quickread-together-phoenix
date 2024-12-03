@@ -78,7 +78,7 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {wpm, ""} = Integer.parse(wpm)
     wpm = clamp(wpm, 60, 1000)
 
-    Player.cast({:wpm_changed, wpm})
+    Player.new_words_per_minute(wpm)
 
     broadcast!({:wpm_changed, wpm})
 
@@ -94,9 +94,15 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {chunk_size, ""} = Integer.parse(chunk_size)
     chunk_size = clamp(chunk_size, 1, 10)
 
-    Player.cast({:chunk_size_changed, chunk_size})
+    Player.new_chunk_size(chunk_size)
 
     broadcast!({:chunk_size_changed, chunk_size})
+
+    {:noreply, socket}
+  end
+
+  def handle_event("controls_reset_pressed", _, socket) do
+    Player.controls_reset()
 
     {:noreply, socket}
   end
