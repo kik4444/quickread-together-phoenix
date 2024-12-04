@@ -8,26 +8,6 @@ defmodule QuickreadTogether.Player do
   alias QuickreadTogether.UpdateChunkMsg
   alias QuickreadTogetherWeb.ReaderLive
 
-  defp calculate_speed(words_per_minute, chunk_size)
-       when is_integer(words_per_minute) and is_integer(chunk_size) do
-    (1000 / (words_per_minute / 60) * chunk_size) |> floor()
-  end
-
-  defp recalculate_index(current_index, chunk_size, new_chunk_size)
-       when is_integer(current_index) and is_integer(chunk_size) and is_integer(new_chunk_size) do
-    (current_index * chunk_size) |> div(new_chunk_size)
-  end
-
-  defp calculate_duration(%PlayerState{} = state) do
-    remaining_chunks = tuple_size(state.parsed_text) - state.current_index
-    duration_seconds = (state.speed * state.chunk_size * remaining_chunks) |> div(1000)
-
-    minutes = rem(duration_seconds, 3600) |> div(60)
-    seconds = rem(duration_seconds, 60)
-
-    "#{minutes}m #{seconds}s"
-  end
-
   # --- CLIENT ---
   def start_link(_), do: GenServer.start_link(__MODULE__, %PlayerState{}, name: __MODULE__)
 
@@ -45,7 +25,7 @@ defmodule QuickreadTogether.Player do
   def controls_reset, do: GenServer.cast(__MODULE__, :controls_reset)
   def index_changed(new_index) when is_integer(new_index), do: GenServer.cast(__MODULE__, {:index_changed, new_index})
 
-  # --- SERVER STATE ---
+  # --- SERVER ---
   @impl true
   def init(init), do: {:ok, init}
 
@@ -54,8 +34,6 @@ defmodule QuickreadTogether.Player do
 
   @impl true
   def handle_cast({:set, fun}, state), do: {:noreply, fun.(state)}
-
-  # --- SERVER PLAYER ---
 
   # Initial start.
   @impl true
@@ -266,5 +244,25 @@ defmodule QuickreadTogether.Player do
     ReaderLive.broadcast!(:selection_blur)
 
     {:noreply, %{state | current_index: tuple_size(parsed_text) - 1, playing: false, textarea_locked: false}}
+  defp calculate_speed(words_per_minute, chunk_size)
+       when is_integer(words_per_minute) and is_integer(chunk_size) do
+    (1000 / (words_per_minute / 60) * chunk_size) |> floor()
+  end
+
+  defp recalculate_index(current_index, chunk_size, new_chunk_size)
+       when is_integer(current_index) and is_integer(chunk_size) and is_integer(new_chunk_size) do
+    (current_index * chunk_size) |> div(new_chunk_size)
+  end
+
+  defp calculate_duration(%PlayerState{} = state) do
+    remaining_chunks = tuple_size(state.parsed_text) - state.current_index
+    duration_seconds = (state.speed * state.chunk_size * remaining_chunks) |> div(1000)
+
+    minutes = rem(duration_seconds, 3600) |> div(60)
+    seconds = rem(duration_seconds, 60)
+
+    "#{minutes}m #{seconds}s"
+  end
+
   end
 end
