@@ -1,8 +1,10 @@
 defmodule QuickreadTogether.Player do
+  @moduledoc false
+
   use GenServer
 
-  alias QuickreadTogether.TextChunk
   alias QuickreadTogether.PlayerState
+  alias QuickreadTogether.TextChunk
   alias QuickreadTogetherWeb.ReaderLive
 
   def start_link(_), do: GenServer.start_link(__MODULE__, %PlayerState{}, name: __MODULE__)
@@ -22,13 +24,13 @@ defmodule QuickreadTogether.Player do
 
   def set(fun) when is_function(fun, 1), do: GenServer.cast(__MODULE__, {:set, fun})
 
-  def play(), do: GenServer.cast(__MODULE__, :play)
-  def pause(), do: GenServer.cast(__MODULE__, :pause)
-  def restart(), do: GenServer.cast(__MODULE__, :restart)
-  def stop(), do: GenServer.cast(__MODULE__, :stop)
+  def play, do: GenServer.cast(__MODULE__, :play)
+  def pause, do: GenServer.cast(__MODULE__, :pause)
+  def restart, do: GenServer.cast(__MODULE__, :restart)
+  def stop, do: GenServer.cast(__MODULE__, :stop)
   def new_words_per_minute(wpm) when is_integer(wpm), do: GenServer.cast(__MODULE__, {:wpm_changed, wpm})
   def new_chunk_size(cs) when is_integer(cs), do: GenServer.cast(__MODULE__, {:chunk_size_changed, cs})
-  def controls_reset(), do: GenServer.cast(__MODULE__, :controls_reset)
+  def controls_reset, do: GenServer.cast(__MODULE__, :controls_reset)
 
   # --- SERVER STATE ---
   @impl true

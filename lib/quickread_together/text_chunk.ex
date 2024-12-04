@@ -1,4 +1,6 @@
 defmodule QuickreadTogether.TextChunk do
+  @moduledoc false
+
   @type t :: %__MODULE__{
           chunk: String.t(),
           start_offset: non_neg_integer(),

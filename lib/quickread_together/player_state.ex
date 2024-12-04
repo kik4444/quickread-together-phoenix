@@ -1,4 +1,6 @@
 defmodule QuickreadTogether.PlayerState do
+  @moduledoc false
+
   alias QuickreadTogether.TextChunk
 
   @derive {Inspect, except: [:parsed_text]}

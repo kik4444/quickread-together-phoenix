@@ -1,5 +1,5 @@
 defmodule QuickreadTogether.TextChunkTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   alias QuickreadTogether.TextChunk
 
   test "empty input" do
