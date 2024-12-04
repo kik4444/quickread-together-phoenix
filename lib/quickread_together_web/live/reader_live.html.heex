@@ -14,8 +14,8 @@
     {if @current_chunk == "", do: "Quickread Together", else: @current_chunk}
   </p>
 
-  <div id="controls" class="flex flex-col gap-2 place-items-center">
-    <div id="chunking" class="max-w-[95%] grid grid-flow-col gap-1 place-items-center">
+  <div id="controls" class="max-w-[95%] text-sm flex flex-col gap-2 place-items-center">
+    <div id="chunking" class="grid grid-flow-col gap-1 place-items-center">
       <label class="text-center">Words per minute</label>
       <.form for={@controls} phx-change="wpm_changed">
         <input
@@ -46,7 +46,7 @@
       <.button phx-click="controls_reset_pressed">Reset</.button>
     </div>
 
-    <div id="progress" class="flex gap-3">
+    <div id="progress" class="flex gap-2">
       <p>Chunk: {@current_index} of {@chunks_length}</p>
 
       <p>Duration: {@duration}</p>
