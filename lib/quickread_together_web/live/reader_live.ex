@@ -29,6 +29,7 @@ defmodule QuickreadTogetherWeb.ReaderLive do
        textarea: %{"raw_text" => state.raw_text},
        playing: state.playing,
        current_chunk: elem(state.parsed_text, clamp(state.current_index, 0, tuple_size(state.parsed_text) - 1)).chunk,
+       current_index: state.current_index,
        textarea_locked: state.textarea_locked,
        controls: %{"words_per_minute" => state.words_per_minute, "chunk_size" => state.chunk_size}
      )}
@@ -124,9 +125,9 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {:noreply, assign(socket, [new_state])}
   end
 
-  def handle_info({:update_chunk, %TextChunk{} = text_chunk}, socket) do
+  def handle_info({:update_chunk, %TextChunk{} = text_chunk, index}, socket) do
     {:noreply,
-     assign(socket, current_chunk: text_chunk.chunk)
+     assign(socket, current_chunk: text_chunk.chunk, current_index: index)
      |> push_event("select_range", %{
        start_offset: text_chunk.start_offset,
        stop_offset: text_chunk.stop_offset

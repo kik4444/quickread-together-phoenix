@@ -93,9 +93,11 @@ defmodule QuickreadTogether.Player do
   def handle_cast(:stop, %PlayerState{} = state) do
     ReaderLive.broadcast!({:multiple_assigns_changes, [playing: false, textarea_locked: false]})
 
-    ReaderLive.broadcast!({:update_chunk, elem(state.parsed_text, 0)})
+    index = 0
 
-    {:noreply, %{state | current_index: 0, playing: false, textarea_locked: false}}
+    ReaderLive.broadcast!({:update_chunk, elem(state.parsed_text, index), index})
+
+    {:noreply, %{state | current_index: index, playing: false, textarea_locked: false}}
   end
 
   # words_per_minute changed
@@ -161,7 +163,7 @@ defmodule QuickreadTogether.Player do
       when current_index < tuple_size(parsed_text) do
     %TextChunk{} = text_chunk = elem(parsed_text, current_index)
 
-    ReaderLive.broadcast!({:update_chunk, text_chunk})
+    ReaderLive.broadcast!({:update_chunk, text_chunk, current_index})
 
     Process.send_after(self(), :next_chunk, speed)
 
@@ -175,7 +177,7 @@ defmodule QuickreadTogether.Player do
   def handle_info(:next_chunk, %PlayerState{playing: false} = state) do
     %TextChunk{} = text_chunk = elem(state.parsed_text, state.current_index)
 
-    ReaderLive.broadcast!({:update_chunk, text_chunk})
+    ReaderLive.broadcast!({:update_chunk, text_chunk, state.current_index})
 
     {:noreply, state}
   end
