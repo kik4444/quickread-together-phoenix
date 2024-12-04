@@ -17,5 +17,9 @@ defmodule QuickreadTogether.PlayerState do
             current_index: 0,
             # Derived from words_per_minute and chunk_size,
             # but kept separate to avoid re-calculating it
-            speed: 200
+            speed: 200,
+            # Duration is also derived,
+            # but must be kept here to sync it
+            # with newly-joined clients
+            duration: "0m 0s"
 end

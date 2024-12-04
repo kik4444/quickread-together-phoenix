@@ -31,6 +31,7 @@ defmodule QuickreadTogetherWeb.ReaderLive do
        current_chunk: elem(state.parsed_text, clamp(state.current_index, 0, tuple_size(state.parsed_text) - 1)).chunk,
        current_index: state.current_index,
        chunks_length: tuple_size(state.parsed_text) - 1,
+       duration: state.duration,
        textarea_locked: state.textarea_locked,
        controls: %{"words_per_minute" => state.words_per_minute, "chunk_size" => state.chunk_size}
      )}
@@ -121,9 +122,9 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {:noreply, assign(socket, [new_state])}
   end
 
-  def handle_info({:update_chunk, %TextChunk{} = text_chunk, index}, socket) do
+  def handle_info({:update_chunk, %TextChunk{} = text_chunk, index, duration}, socket) do
     {:noreply,
-     assign(socket, current_chunk: text_chunk.chunk, current_index: index)
+     assign(socket, current_chunk: text_chunk.chunk, current_index: index, duration: duration)
      |> push_event("select_range", %{
        start_offset: text_chunk.start_offset,
        stop_offset: text_chunk.stop_offset
@@ -132,6 +133,10 @@ defmodule QuickreadTogetherWeb.ReaderLive do
 
   def handle_info({:update_chunks_length, length}, socket) do
     {:noreply, assign(socket, chunks_length: length - 1)}
+  end
+
+  def handle_info({:update_duration, duration}, socket) do
+    {:noreply, assign(socket, duration: duration)}
   end
 
   def handle_info(:selection_blur, socket) do
