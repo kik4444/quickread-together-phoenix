@@ -25,7 +25,7 @@
           step="10"
           name="words_per_minute"
           value={@controls["words_per_minute"]}
-          phx-debouce="250"
+          phx-debounce="500"
           class="w-[60pt]"
         />
       </.form>
@@ -38,7 +38,7 @@
           max="10"
           name="chunk_size"
           value={@controls["chunk_size"]}
-          phx-debouce="250"
+          phx-debounce="500"
           class="w-[45pt]"
         />
       </.form>
@@ -52,7 +52,7 @@
       <p>Duration: {@duration}</p>
 
       <.form for={@controls} phx-change="index_changed">
-        <input type="range" min="0" max={@chunks_length} name="index" value={@current_index} phx-debouce="250" />
+        <input type="range" min="0" max={@chunks_length} name="index" value={@current_index} phx-debounce="500" />
       </.form>
     </div>
 
