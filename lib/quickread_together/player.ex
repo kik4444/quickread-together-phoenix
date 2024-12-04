@@ -7,8 +7,6 @@ defmodule QuickreadTogether.Player do
   alias QuickreadTogether.TextChunk
   alias QuickreadTogetherWeb.ReaderLive
 
-  def start_link(_), do: GenServer.start_link(__MODULE__, %PlayerState{}, name: __MODULE__)
-
   defp calculate_speed(words_per_minute, chunk_size)
        when is_integer(words_per_minute) and is_integer(chunk_size) do
     (1000 / (words_per_minute / 60) * chunk_size) |> floor()
@@ -20,6 +18,8 @@ defmodule QuickreadTogether.Player do
   end
 
   # --- CLIENT ---
+  def start_link(_), do: GenServer.start_link(__MODULE__, %PlayerState{}, name: __MODULE__)
+
   def get(fun) when is_function(fun, 1), do: GenServer.call(__MODULE__, {:get, fun}, :infinity)
 
   def play, do: GenServer.cast(__MODULE__, :play)
