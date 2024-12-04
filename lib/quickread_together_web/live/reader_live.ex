@@ -141,10 +141,6 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {:noreply, assign(socket, chunks_length: length - 1)}
   end
 
-  def handle_info({:update_duration, duration}, socket) do
-    {:noreply, assign(socket, duration: duration)}
-  end
-
   def handle_info(:selection_blur, socket) do
     {:noreply, push_event(socket, "selection_blur", %{})}
   end

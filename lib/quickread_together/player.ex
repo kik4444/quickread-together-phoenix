@@ -88,19 +88,13 @@ defmodule QuickreadTogether.Player do
 
   # Handle changing the textarea text while not playing or locked.
   @impl true
-  def handle_cast({:new_text, text}, %PlayerState{playing: false, textarea_locked: false} = state) do
-    index = 0
-    parsed_text = TextChunk.parse(text, state.chunk_size)
+  def handle_cast({:new_text, new_text}, %PlayerState{playing: false, textarea_locked: false} = state) do
+    new_parsed_text = TextChunk.parse(new_text, state.chunk_size)
 
-    state = %{state | parsed_text: parsed_text, raw_text: text, current_index: index}
+    ReaderLive.broadcast!({:new_text, new_text})
+    ReaderLive.broadcast!({:update_chunks_length, tuple_size(new_parsed_text)})
 
-    duration = calculate_duration(state)
-
-    ReaderLive.broadcast!({:new_text, text})
-    ReaderLive.broadcast!({:update_chunks_length, tuple_size(parsed_text)})
-    ReaderLive.broadcast!({:update_duration, duration})
-
-    {:noreply, %{state | duration: duration}}
+    {:noreply, do_restart(%{state | parsed_text: new_parsed_text, raw_text: new_text})}
   end
 
   # Ignore invalid new_text requests due to latency.
