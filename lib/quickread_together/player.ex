@@ -5,6 +5,7 @@ defmodule QuickreadTogether.Player do
 
   alias QuickreadTogether.PlayerState
   alias QuickreadTogether.TextChunk
+  alias QuickreadTogether.UpdateChunkMsg
   alias QuickreadTogetherWeb.ReaderLive
 
   defp calculate_speed(words_per_minute, chunk_size)
@@ -99,7 +100,10 @@ defmodule QuickreadTogether.Player do
   def handle_cast(:restart, %PlayerState{} = state) do
     index = 0
 
-    ReaderLive.broadcast!({:update_chunk, elem(state.parsed_text, index), index, calculate_duration(state)})
+    ReaderLive.broadcast!(
+      {:update_chunk,
+       %UpdateChunkMsg{text_chunk: elem(state.parsed_text, index), index: index, duration: calculate_duration(state)}}
+    )
 
     {:noreply, %{state | current_index: index}}
   end
@@ -108,10 +112,14 @@ defmodule QuickreadTogether.Player do
   @impl true
   def handle_cast(:stop, %PlayerState{} = state) do
     ReaderLive.broadcast!({:multiple_assigns_changes, [playing: false, textarea_locked: false]})
+    ReaderLive.broadcast!(:selection_blur)
 
     index = 0
 
-    ReaderLive.broadcast!({:update_chunk, elem(state.parsed_text, index), index, calculate_duration(state)})
+    ReaderLive.broadcast!(
+      {:update_chunk,
+       %UpdateChunkMsg{text_chunk: elem(state.parsed_text, index), index: index, duration: calculate_duration(state)}}
+    )
 
     {:noreply, %{state | current_index: index, playing: false, textarea_locked: false}}
   end
@@ -191,7 +199,9 @@ defmodule QuickreadTogether.Player do
 
     duration = calculate_duration(state)
 
-    ReaderLive.broadcast!({:update_chunk, text_chunk, new_index, duration})
+    ReaderLive.broadcast!(
+      {:update_chunk, %UpdateChunkMsg{text_chunk: text_chunk, index: new_index, duration: duration}}
+    )
 
     {:noreply, %{state | current_index: new_index, duration: duration}}
   end
@@ -216,7 +226,9 @@ defmodule QuickreadTogether.Player do
 
     duration = calculate_duration(state)
 
-    ReaderLive.broadcast!({:update_chunk, text_chunk, current_index, duration})
+    ReaderLive.broadcast!(
+      {:update_chunk, %UpdateChunkMsg{text_chunk: text_chunk, index: current_index, duration: duration, focus: true}}
+    )
 
     Process.send_after(self(), :next_chunk, speed)
 
@@ -232,7 +244,9 @@ defmodule QuickreadTogether.Player do
 
     duration = calculate_duration(state)
 
-    ReaderLive.broadcast!({:update_chunk, text_chunk, state.current_index, duration})
+    ReaderLive.broadcast!(
+      {:update_chunk, %UpdateChunkMsg{text_chunk: text_chunk, index: state.current_index, duration: duration}}
+    )
 
     {:noreply, %{state | duration: duration}}
   end

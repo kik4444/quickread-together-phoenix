@@ -4,6 +4,7 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   alias QuickreadTogether.Player
   alias QuickreadTogether.PlayerState
   alias QuickreadTogether.TextChunk
+  alias QuickreadTogether.UpdateChunkMsg
 
   defp clamp(value, min, max) when is_number(value) and is_number(min) and is_number(max) do
     cond do
@@ -130,13 +131,18 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {:noreply, assign(socket, [new_state])}
   end
 
-  def handle_info({:update_chunk, %TextChunk{} = text_chunk, index, duration}, socket) do
-    {:noreply,
-     assign(socket, current_chunk: text_chunk.chunk, current_index: index, duration: duration)
-     |> push_event("select_range", %{
-       start_offset: text_chunk.start_offset,
-       stop_offset: text_chunk.stop_offset
-     })}
+  def handle_info({:update_chunk, %UpdateChunkMsg{text_chunk: %TextChunk{}} = msg}, socket) do
+    socket = assign(socket, current_chunk: msg.text_chunk.chunk, current_index: msg.index, duration: msg.duration)
+
+    if msg.focus do
+      {:noreply,
+       push_event(socket, "select_range", %{
+         start_offset: msg.text_chunk.start_offset,
+         stop_offset: msg.text_chunk.stop_offset
+       })}
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_info({:update_chunks_length, length}, socket) do
