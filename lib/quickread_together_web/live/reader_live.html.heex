@@ -7,11 +7,11 @@
       phx-debounce="500"
       class="h-full min-w-[50%]"
       readonly={@textarea_locked}
-    ><%= @textarea["raw_text"] %></textarea>
+    >{ @textarea["raw_text"] }</textarea>
   </.form>
 
   <p id="display" class="font-semibold text-xl antialiased">
-    <%= if @current_chunk == "", do: "Quickread Together", else: @current_chunk %>
+    {if @current_chunk == "", do: "Quickread Together", else: @current_chunk}
   </p>
 
   <div id="controls" class="flex flex-col gap-2 place-items-center">
@@ -65,7 +65,7 @@
       </.button>
 
       <.button phx-click={if @playing, do: "pause_pressed", else: "play_pressed"} phx-throttle="250">
-        <%= if @playing, do: "Pause", else: "Play" %>
+        {if @playing, do: "Pause", else: "Play"}
       </.button>
     </div>
   </div>
