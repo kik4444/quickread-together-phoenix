@@ -5,6 +5,7 @@ defmodule QuickreadTogether.PlayerState do
 
   @initial_text "Welcome to Quickread Together. Press play to begin reading quickly."
 
+  # Avoid showing ultra-long parsed_text in logs.
   @derive {Inspect, except: [:parsed_text]}
   defstruct raw_text: @initial_text,
             playing: false,
