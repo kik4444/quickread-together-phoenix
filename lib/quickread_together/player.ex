@@ -86,7 +86,7 @@ defmodule QuickreadTogether.Player do
     {:noreply, %{do_restart(state) | playing: false, textarea_locked: false}}
   end
 
-  # Handle changing the textarea text while not playing or locked
+  # Handle changing the textarea text while not playing or locked.
   @impl true
   def handle_cast({:new_text, text}, %PlayerState{playing: false, textarea_locked: false} = state) do
     index = 0
@@ -107,13 +107,11 @@ defmodule QuickreadTogether.Player do
   @impl true
   def handle_cast({:new_text, _text}, state), do: {:noreply, state}
 
-  # words_per_minute changed
   @impl true
   def handle_cast({:wpm_changed, new_wpm}, %PlayerState{chunk_size: chunk_size} = state) do
     {:noreply, %{state | words_per_minute: new_wpm, speed: calculate_speed(new_wpm, chunk_size)}}
   end
 
-  # chunk_size changed
   def handle_cast({:chunk_size_changed, new_chunk_size}, %PlayerState{} = state) do
     # Recalculate what the new chunk index should be after recreating the text chunks with a different size
     new_index = recalculate_index(state.current_index, state.current_index, new_chunk_size)
