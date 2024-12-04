@@ -223,7 +223,7 @@ defmodule QuickreadTogether.Player do
 
   defp calculate_duration(%PlayerState{} = state) do
     remaining_chunks = tuple_size(state.parsed_text) - state.current_index
-    duration_seconds = (state.speed * state.chunk_size * remaining_chunks) |> div(1000)
+    duration_seconds = (state.speed * state.chunk_size * remaining_chunks / 1000 / state.chunk_size) |> floor()
 
     minutes = rem(duration_seconds, 3600) |> div(60)
     seconds = rem(duration_seconds, 60)
