@@ -62,7 +62,7 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   end
 
   def handle_event("stop_pressed", _, socket) do
-    Player.stop()
+    with true <- socket.assigns.textarea_locked, do: Player.stop()
 
     {:noreply, socket}
   end
