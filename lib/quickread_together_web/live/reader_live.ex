@@ -30,18 +30,14 @@ defmodule QuickreadTogetherWeb.ReaderLive do
        playing: state.playing,
        current_chunk: elem(state.parsed_text, clamp(state.current_index, 0, tuple_size(state.parsed_text) - 1)).chunk,
        current_index: state.current_index,
+       chunks_length: tuple_size(state.parsed_text) - 1,
        textarea_locked: state.textarea_locked,
        controls: %{"words_per_minute" => state.words_per_minute, "chunk_size" => state.chunk_size}
      )}
   end
 
   def handle_event("text_changed", %{"raw_text" => new_text}, socket) do
-    # Due to client latency, one client may send a text_changed event
-    # after we've started playing, so we must ignore it.
-    with false <- Player.get(& &1.textarea_locked) do
-      Player.set(&%{&1 | raw_text: new_text})
-      broadcast!({:new_text, new_text})
-    end
+    Player.new_text(new_text)
 
     {:noreply, socket}
   end
@@ -132,6 +128,10 @@ defmodule QuickreadTogetherWeb.ReaderLive do
        start_offset: text_chunk.start_offset,
        stop_offset: text_chunk.stop_offset
      })}
+  end
+
+  def handle_info({:update_chunks_length, length}, socket) do
+    {:noreply, assign(socket, chunks_length: length - 1)}
   end
 
   def handle_info(:selection_blur, socket) do

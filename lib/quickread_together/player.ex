@@ -22,12 +22,13 @@ defmodule QuickreadTogether.Player do
   # --- CLIENT ---
   def get(fun) when is_function(fun, 1), do: GenServer.call(__MODULE__, {:get, fun}, :infinity)
 
-  def set(fun) when is_function(fun, 1), do: GenServer.cast(__MODULE__, {:set, fun})
-
   def play, do: GenServer.cast(__MODULE__, :play)
   def pause, do: GenServer.cast(__MODULE__, :pause)
   def restart, do: GenServer.cast(__MODULE__, :restart)
   def stop, do: GenServer.cast(__MODULE__, :stop)
+
+  def new_text(text) when is_binary(text), do: GenServer.cast(__MODULE__, {:new_text, text})
+
   def new_words_per_minute(wpm) when is_integer(wpm), do: GenServer.cast(__MODULE__, {:wpm_changed, wpm})
   def new_chunk_size(cs) when is_integer(cs), do: GenServer.cast(__MODULE__, {:chunk_size_changed, cs})
   def controls_reset, do: GenServer.cast(__MODULE__, :controls_reset)
@@ -49,13 +50,11 @@ defmodule QuickreadTogether.Player do
   def handle_cast(:play, %PlayerState{playing: false, textarea_locked: false} = state) do
     ReaderLive.broadcast!({:multiple_assigns_changes, [playing: true, textarea_locked: true]})
 
-    parsed_text = TextChunk.parse(state.raw_text, state.chunk_size)
     speed = calculate_speed(state.words_per_minute, state.chunk_size)
 
     send(self(), :next_chunk)
 
-    {:noreply,
-     %{state | parsed_text: parsed_text, current_index: 0, speed: speed, playing: true, textarea_locked: true}}
+    {:noreply, %{state | current_index: 0, speed: speed, playing: true, textarea_locked: true}}
   end
 
   # Resume from pause.
@@ -99,6 +98,25 @@ defmodule QuickreadTogether.Player do
 
     {:noreply, %{state | current_index: index, playing: false, textarea_locked: false}}
   end
+
+  # Handle changing the textarea text while not playing or locked
+  @impl true
+  def handle_cast({:new_text, text}, %PlayerState{playing: false, textarea_locked: false} = state) do
+    parsed_text = TextChunk.parse(text, state.chunk_size)
+
+    # TODO update duration?
+
+    index = 0
+
+    ReaderLive.broadcast!({:new_text, text})
+    ReaderLive.broadcast!({:update_chunks_length, tuple_size(parsed_text)})
+
+    {:noreply, %{state | parsed_text: parsed_text, raw_text: text, current_index: index}}
+  end
+
+  # Ignore invalid new_text requests due to latency.
+  @impl true
+  def handle_cast({:new_text, _text}, state), do: {:noreply, state}
 
   # words_per_minute changed
   @impl true
