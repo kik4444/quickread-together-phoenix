@@ -108,7 +108,11 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   end
 
   def handle_info({:new_text, new_text}, socket) do
-    {:noreply, assign(socket, textarea: %{"raw_text" => new_text}) |> push_event("new_text", %{new_text: new_text})}
+    {:noreply,
+     assign(socket, textarea: %{"raw_text" => new_text})
+     # We use push_event for inputs because updating the assigns
+     # won't change the input's value on the frontend if the user is focused on it.
+     |> push_event("new_text", %{new_text: new_text})}
   end
 
   def handle_info({:playing, _} = new_state, socket) do
@@ -146,10 +150,14 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   end
 
   def handle_info({:wpm_changed, wpm}, socket) do
-    {:noreply, assign(socket, controls: %{socket.assigns.controls | "words_per_minute" => wpm})}
+    {:noreply,
+     assign(socket, controls: %{socket.assigns.controls | "words_per_minute" => wpm})
+     |> push_event("wpm_changed", %{wpm: wpm})}
   end
 
   def handle_info({:chunk_size_changed, chunk_size}, socket) do
-    {:noreply, assign(socket, controls: %{socket.assigns.controls | "chunk_size" => chunk_size})}
+    {:noreply,
+     assign(socket, controls: %{socket.assigns.controls | "chunk_size" => chunk_size})
+     |> push_event("chunk_size_changed", %{chunk_size: chunk_size})}
   end
 end
