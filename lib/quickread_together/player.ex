@@ -107,49 +107,15 @@ defmodule QuickreadTogether.Player do
   end
 
   def handle_cast({:chunk_size_changed, new_chunk_size}, %PlayerState{} = state) do
-    # Recalculate what the new chunk index should be after recreating the text chunks with a different size
-    new_index = recalculate_index(state.current_index, state.chunk_size, new_chunk_size)
-
-    new_parsed_text = TextChunk.parse(state.raw_text, new_chunk_size)
-
-    new_speed = calculate_speed(state.words_per_minute, new_chunk_size)
-
-    ReaderLive.broadcast!({:update_chunks_length, tuple_size(new_parsed_text)})
-
-    {:noreply,
-     %{
-       state
-       | parsed_text: new_parsed_text,
-         current_index: new_index,
-         chunk_size: new_chunk_size,
-         speed: new_speed
-     }}
+    {:noreply, do_update_chunk_size(state, new_chunk_size)}
   end
 
-  # TODO combine with chunk_size_changed
   def handle_cast(:controls_reset, %PlayerState{} = state) do
     for new_state <- [wpm_changed: 300, chunk_size_changed: 1] do
       ReaderLive.broadcast!(new_state)
     end
 
-    speed =
-      if state.words_per_minute != 300 or state.chunk_size != 1 do
-        calculate_speed(300, 1)
-      else
-        state.speed
-      end
-
-    {parsed_text, index} =
-      if state.chunk_size != 1 do
-        {TextChunk.parse(state.raw_text), recalculate_index(state.current_index, state.chunk_size, 1)}
-      else
-        {state.parsed_text, state.current_index}
-      end
-
-    ReaderLive.broadcast!({:update_chunks_length, tuple_size(parsed_text)})
-
-    {:noreply,
-     %{state | parsed_text: parsed_text, current_index: index, words_per_minute: 300, chunk_size: 1, speed: speed}}
+    {:noreply, do_update_chunk_size(%{state | words_per_minute: 300}, 1)}
   end
 
   def handle_cast({:index_changed, new_index}, %PlayerState{parsed_text: parsed_text} = state)
@@ -234,5 +200,18 @@ defmodule QuickreadTogether.Player do
     seconds = rem(duration_seconds, 60)
 
     "#{minutes}m #{seconds}s"
+  end
+
+  defp do_update_chunk_size(%PlayerState{} = state, new_chunk_size) when is_integer(new_chunk_size) do
+    # Recalculate what the new chunk index should be after recreating the text chunks with a different size
+    new_index = recalculate_index(state.current_index, state.chunk_size, new_chunk_size)
+
+    new_parsed_text = TextChunk.parse(state.raw_text, new_chunk_size)
+
+    new_speed = calculate_speed(state.words_per_minute, new_chunk_size)
+
+    ReaderLive.broadcast!({:update_chunks_length, tuple_size(new_parsed_text)})
+
+    %{state | parsed_text: new_parsed_text, current_index: new_index, chunk_size: new_chunk_size, speed: new_speed}
   end
 end
