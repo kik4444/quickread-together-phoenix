@@ -64,7 +64,11 @@
       </.button>
 
       <.button phx-click={if @playing, do: "pause_pressed", else: "play_pressed"} phx-throttle="250">
-        {if @playing, do: "Pause", else: "Play"}
+        {cond do
+          not @playing and not @textarea_locked -> "Play"
+          @playing -> "Pause"
+          true -> "Resume"
+        end}
       </.button>
     </div>
   </div>
