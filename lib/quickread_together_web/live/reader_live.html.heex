@@ -50,7 +50,10 @@
       <p>Chunk: {@current_index} of {@chunks_length}</p>
 
       <p>Duration: {@duration}</p>
-      <%!-- TODO Progress range input --%>
+
+      <.form for={@controls} phx-change="index_changed">
+        <input type="range" min="0" max={@chunks_length} name="index" value={@current_index} phx-debouce="250" />
+      </.form>
     </div>
 
     <div id="playback" class="w-full px-5 grid grid-cols-3 gap-3">

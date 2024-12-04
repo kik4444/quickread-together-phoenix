@@ -42,6 +42,7 @@ defmodule QuickreadTogether.Player do
   def new_words_per_minute(wpm) when is_integer(wpm), do: GenServer.cast(__MODULE__, {:wpm_changed, wpm})
   def new_chunk_size(cs) when is_integer(cs), do: GenServer.cast(__MODULE__, {:chunk_size_changed, cs})
   def controls_reset, do: GenServer.cast(__MODULE__, :controls_reset)
+  def index_changed(new_index) when is_integer(new_index), do: GenServer.cast(__MODULE__, {:index_changed, new_index})
 
   # --- SERVER STATE ---
   @impl true
@@ -64,7 +65,7 @@ defmodule QuickreadTogether.Player do
 
     send(self(), :next_chunk)
 
-    {:noreply, %{state | current_index: 0, speed: speed, playing: true, textarea_locked: true}}
+    {:noreply, %{state | speed: speed, playing: true, textarea_locked: true}}
   end
 
   # Resume from pause.
@@ -183,6 +184,20 @@ defmodule QuickreadTogether.Player do
     {:noreply,
      %{state | parsed_text: parsed_text, current_index: index, words_per_minute: 300, chunk_size: 1, speed: speed}}
   end
+
+  def handle_cast({:index_changed, new_index}, %PlayerState{parsed_text: parsed_text} = state)
+      when new_index in 0..(tuple_size(parsed_text) - 1)//1 do
+    %TextChunk{} = text_chunk = elem(parsed_text, new_index)
+
+    duration = calculate_duration(state)
+
+    ReaderLive.broadcast!({:update_chunk, text_chunk, new_index, duration})
+
+    {:noreply, %{state | current_index: new_index, duration: duration}}
+  end
+
+  # Ignore invalid indices
+  def handle_cast({:index_changed, _index}, state), do: {:noreply, state}
 
   # Display current chunk and move to the next.
   @impl true

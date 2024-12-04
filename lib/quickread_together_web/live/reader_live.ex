@@ -105,6 +105,14 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {:noreply, socket}
   end
 
+  def handle_event("index_changed", %{"index" => new_index}, socket) do
+    {index, ""} = Integer.parse(new_index)
+
+    Player.index_changed(index)
+
+    {:noreply, socket}
+  end
+
   # Change multiple fields that are common between ReaderLive and PlayerState
   def handle_info({:multiple_assigns_changes, changes}, socket) when is_list(changes) do
     {:noreply, assign(socket, changes)}
