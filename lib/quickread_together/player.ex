@@ -85,7 +85,13 @@ defmodule QuickreadTogether.Player do
 
   # Restart from the beginning.
   @impl true
-  def handle_cast(:restart, %PlayerState{} = state), do: {:noreply, %{state | current_index: 0}}
+  def handle_cast(:restart, %PlayerState{} = state) do
+    index = 0
+
+    ReaderLive.broadcast!({:update_chunk, elem(state.parsed_text, index), index})
+
+    {:noreply, %{state | current_index: index}}
+  end
 
   # Stop and restart.
   @impl true
