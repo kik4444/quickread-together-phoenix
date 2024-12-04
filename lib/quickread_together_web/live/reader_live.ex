@@ -68,34 +68,22 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {:noreply, socket}
   end
 
-  # Ignore empty input
-  def handle_event("wpm_changed", %{"words_per_minute" => wpm}, socket) when wpm == "" do
-    {:noreply, socket}
-  end
-
   def handle_event("wpm_changed", %{"words_per_minute" => wpm}, socket) do
-    {wpm, ""} = Integer.parse(wpm)
-    wpm = clamp(wpm, 60, 1000)
+    with {parsed, ""} <- Integer.parse(wpm),
+         clamped <- clamp(parsed, 60, 1000) do
+      Player.new_words_per_minute(clamped)
+      broadcast!({:wpm_changed, clamped})
+    end
 
-    Player.new_words_per_minute(wpm)
-
-    broadcast!({:wpm_changed, wpm})
-
-    {:noreply, socket}
-  end
-
-  # Ignore empty input
-  def handle_event("chunk_size_changed", %{"chunk_size" => chunk_size}, socket) when chunk_size == "" do
     {:noreply, socket}
   end
 
   def handle_event("chunk_size_changed", %{"chunk_size" => chunk_size}, socket) do
-    {chunk_size, ""} = Integer.parse(chunk_size)
-    chunk_size = clamp(chunk_size, 1, 10)
-
-    Player.new_chunk_size(chunk_size)
-
-    broadcast!({:chunk_size_changed, chunk_size})
+    with {parsed, ""} <- Integer.parse(chunk_size),
+         clamped <- clamp(parsed, 1, 10) do
+      Player.new_chunk_size(clamped)
+      broadcast!({:chunk_size_changed, clamped})
+    end
 
     {:noreply, socket}
   end
