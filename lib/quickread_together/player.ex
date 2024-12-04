@@ -75,16 +75,7 @@ defmodule QuickreadTogether.Player do
 
   # Restart from the beginning.
   @impl true
-  def handle_cast(:restart, %PlayerState{} = state) do
-    index = 0
-
-    ReaderLive.broadcast!(
-      {:update_chunk,
-       %UpdateChunkMsg{text_chunk: elem(state.parsed_text, index), index: index, duration: calculate_duration(state)}}
-    )
-
-    {:noreply, %{state | current_index: index}}
-  end
+  def handle_cast(:restart, %PlayerState{} = state), do: {:noreply, do_restart(state)}
 
   # Stop and restart.
   @impl true
@@ -92,14 +83,7 @@ defmodule QuickreadTogether.Player do
     ReaderLive.broadcast!({:multiple_assigns_changes, [playing: false, textarea_locked: false]})
     ReaderLive.broadcast!(:selection_blur)
 
-    index = 0
-
-    ReaderLive.broadcast!(
-      {:update_chunk,
-       %UpdateChunkMsg{text_chunk: elem(state.parsed_text, index), index: index, duration: calculate_duration(state)}}
-    )
-
-    {:noreply, %{state | current_index: index, playing: false, textarea_locked: false}}
+    {:noreply, %{do_restart(state) | playing: false, textarea_locked: false}}
   end
 
   # Handle changing the textarea text while not playing or locked
@@ -173,15 +157,7 @@ defmodule QuickreadTogether.Player do
 
   def handle_cast({:index_changed, new_index}, %PlayerState{parsed_text: parsed_text} = state)
       when new_index in 0..(tuple_size(parsed_text) - 1)//1 do
-    %TextChunk{} = text_chunk = elem(parsed_text, new_index)
-
-    duration = calculate_duration(state)
-
-    ReaderLive.broadcast!(
-      {:update_chunk, %UpdateChunkMsg{text_chunk: text_chunk, index: new_index, duration: duration}}
-    )
-
-    {:noreply, %{state | current_index: new_index, duration: duration}}
+    {:noreply, do_update_chunk(%{state | current_index: new_index})}
   end
 
   # Ignore invalid indices
@@ -200,34 +176,16 @@ defmodule QuickreadTogether.Player do
         } = state
       )
       when current_index < tuple_size(parsed_text) do
-    %TextChunk{} = text_chunk = elem(parsed_text, current_index)
-
-    duration = calculate_duration(state)
-
-    ReaderLive.broadcast!(
-      {:update_chunk, %UpdateChunkMsg{text_chunk: text_chunk, index: current_index, duration: duration, focus: true}}
-    )
-
     Process.send_after(self(), :next_chunk, speed)
 
-    {:noreply, %{state | current_index: current_index + 1, duration: duration}}
+    {:noreply, %{do_update_chunk(state, true) | current_index: current_index + 1}}
   end
 
   # When paused, display the current chunk anyway.
   # This is to avoid a desync when you pause, then refresh
   # and suddenly see the next chunk.
   @impl true
-  def handle_info(:next_chunk, %PlayerState{playing: false} = state) do
-    %TextChunk{} = text_chunk = elem(state.parsed_text, state.current_index)
-
-    duration = calculate_duration(state)
-
-    ReaderLive.broadcast!(
-      {:update_chunk, %UpdateChunkMsg{text_chunk: text_chunk, index: state.current_index, duration: duration}}
-    )
-
-    {:noreply, %{state | duration: duration}}
-  end
+  def handle_info(:next_chunk, %PlayerState{playing: false} = state), do: {:noreply, do_update_chunk(state)}
 
   # Playback ended or user seeked beyond end.
   @impl true
@@ -243,7 +201,24 @@ defmodule QuickreadTogether.Player do
 
     ReaderLive.broadcast!(:selection_blur)
 
-    {:noreply, %{state | current_index: tuple_size(parsed_text) - 1, playing: false, textarea_locked: false}}
+    {:noreply, %{do_restart(state) | playing: false, textarea_locked: false}}
+  end
+
+  defp do_update_chunk(%PlayerState{} = state, focus \\ false) do
+    %TextChunk{} = text_chunk = elem(state.parsed_text, state.current_index)
+
+    duration = calculate_duration(state)
+
+    ReaderLive.broadcast!(
+      {:update_chunk,
+       %UpdateChunkMsg{text_chunk: text_chunk, index: state.current_index, duration: duration, focus: focus}}
+    )
+
+    %{state | duration: duration}
+  end
+
+  defp do_restart(%PlayerState{} = state), do: do_update_chunk(%{state | current_index: 0})
+
   defp calculate_speed(words_per_minute, chunk_size)
        when is_integer(words_per_minute) and is_integer(chunk_size) do
     (1000 / (words_per_minute / 60) * chunk_size) |> floor()
@@ -262,7 +237,5 @@ defmodule QuickreadTogether.Player do
     seconds = rem(duration_seconds, 60)
 
     "#{minutes}m #{seconds}s"
-  end
-
   end
 end
