@@ -21,5 +21,5 @@ defmodule QuickreadTogether.PlayerState do
             # Duration is also derived,
             # but must be kept here to sync it
             # with newly-joined clients
-            duration: "0m 0s"
+            duration: "0m 2s"
 end
