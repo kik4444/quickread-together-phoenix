@@ -114,7 +114,7 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   end
 
   def handle_info({:new_text, new_text}, socket) do
-    {:noreply, push_event(socket, "new_text", %{new_text: new_text})}
+    {:noreply, assign(socket, textarea: %{"raw_text" => new_text}) |> push_event("new_text", %{new_text: new_text})}
   end
 
   def handle_info({:playing, _} = new_state, socket) do
