@@ -2,9 +2,7 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   use QuickreadTogetherWeb, :live_view
 
   alias QuickreadTogether.Player
-  alias QuickreadTogether.PlayerState
   alias QuickreadTogether.TextChunk
-  alias QuickreadTogether.UpdateChunkMsg
 
   defp clamp(value, min, max) when is_number(value) and is_number(min) and is_number(max) do
     cond do
@@ -23,7 +21,7 @@ defmodule QuickreadTogetherWeb.ReaderLive do
       Phoenix.PubSub.subscribe(QuickreadTogether.PubSub, "reader:main")
     end
 
-    %PlayerState{} = state = Player.get(& &1)
+    %Player.State{} = state = Player.get(& &1)
 
     {:ok,
      assign(socket,
@@ -102,7 +100,7 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {:noreply, socket}
   end
 
-  # Change multiple fields that are common between ReaderLive and PlayerState
+  # Change multiple fields that are common between ReaderLive and Player.State
   def handle_info({:multiple_assigns_changes, changes}, socket) when is_list(changes) do
     {:noreply, assign(socket, changes)}
   end
@@ -123,7 +121,7 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {:noreply, assign(socket, [new_state])}
   end
 
-  def handle_info({:update_chunk, %UpdateChunkMsg{text_chunk: %TextChunk{}} = msg}, socket) do
+  def handle_info({:update_chunk, %TextChunk.Update{text_chunk: %TextChunk{}} = msg}, socket) do
     socket = assign(socket, current_chunk: msg.text_chunk.chunk, current_index: msg.index, duration: msg.duration)
 
     if msg.focus do

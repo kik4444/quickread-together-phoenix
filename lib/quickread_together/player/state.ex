@@ -1,4 +1,4 @@
-defmodule QuickreadTogether.PlayerState do
+defmodule QuickreadTogether.Player.State do
   @moduledoc false
 
   alias QuickreadTogether.TextChunk

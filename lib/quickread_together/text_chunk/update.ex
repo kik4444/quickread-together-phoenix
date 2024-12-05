@@ -1,4 +1,4 @@
-defmodule QuickreadTogether.UpdateChunkMsg do
+defmodule QuickreadTogether.TextChunk.Update do
   @moduledoc """
   Used to easily encapsulate messages from the Player to ReaderLive to update chunks.
   """
