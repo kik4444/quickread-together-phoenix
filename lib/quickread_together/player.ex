@@ -34,29 +34,11 @@ defmodule QuickreadTogether.Player do
   @impl true
   def handle_cast({:set, fun}, state), do: {:noreply, fun.(state)}
 
-  # Initial start.
+  # Initial start or resume from pause.
   @impl true
-  def handle_cast(:play, %Player.State{playing: false, textarea_locked: false} = state) do
-    ReaderLive.broadcast!({:multiple_assigns_changes, [playing: true, textarea_locked: true]})
+  def handle_cast(:play, %Player.State{playing: false} = state), do: {:noreply, do_play(state)}
 
-    speed = calculate_speed(state.words_per_minute, state.chunk_size)
-
-    send(self(), :next_chunk)
-
-    {:noreply, %{state | speed: speed, playing: true, textarea_locked: true}}
-  end
-
-  # Resume from pause.
-  @impl true
-  def handle_cast(:play, %Player.State{playing: false, textarea_locked: true} = state) do
-    ReaderLive.broadcast!({:playing, true})
-
-    send(self(), :next_chunk)
-
-    {:noreply, %{state | playing: true}}
-  end
-
-  # Ignore invalid resume events due to client latency.
+  # Ignore invalid play events due to client latency.
   @impl true
   def handle_cast(:play, state), do: {:noreply, state}
 
@@ -155,6 +137,14 @@ defmodule QuickreadTogether.Player do
       )
       when current_index >= tuple_size(parsed_text) do
     {:noreply, do_stop(state)}
+  end
+
+  defp do_play(%Player.State{} = state) do
+    ReaderLive.broadcast!({:multiple_assigns_changes, [playing: true, textarea_locked: true]})
+
+    send(self(), :next_chunk)
+
+    %{state | playing: true, textarea_locked: true}
   end
 
   defp do_update_chunk(%Player.State{} = state, focus \\ false) do
