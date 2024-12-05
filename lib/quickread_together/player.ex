@@ -79,12 +79,7 @@ defmodule QuickreadTogether.Player do
 
   # Stop and restart.
   @impl true
-  def handle_cast(:stop, %PlayerState{} = state) do
-    ReaderLive.broadcast!({:multiple_assigns_changes, [playing: false, textarea_locked: false]})
-    ReaderLive.broadcast!(:selection_blur)
-
-    {:noreply, %{do_restart(state) | playing: false, textarea_locked: false}}
-  end
+  def handle_cast(:stop, %PlayerState{} = state), do: {:noreply, do_stop(state)}
 
   # Handle changing the textarea text while not playing or locked.
   @impl true
@@ -150,7 +145,7 @@ defmodule QuickreadTogether.Player do
   @impl true
   def handle_info(:next_chunk, %PlayerState{playing: false} = state), do: {:noreply, do_update_chunk(state)}
 
-  # Playback ended or user seeked beyond end.
+  # Stop when playback ended or user seeked beyond end.
   @impl true
   def handle_info(
         :next_chunk,
@@ -160,11 +155,7 @@ defmodule QuickreadTogether.Player do
         } = state
       )
       when current_index >= tuple_size(parsed_text) do
-    ReaderLive.broadcast!({:multiple_assigns_changes, [playing: false, textarea_locked: false]})
-
-    ReaderLive.broadcast!(:selection_blur)
-
-    {:noreply, %{do_restart(state) | playing: false, textarea_locked: false}}
+    {:noreply, do_stop(state)}
   end
 
   defp do_update_chunk(%PlayerState{} = state, focus \\ false) do
@@ -181,6 +172,26 @@ defmodule QuickreadTogether.Player do
   end
 
   defp do_restart(%PlayerState{} = state), do: do_update_chunk(%{state | current_index: 0})
+
+  defp do_update_chunk_size(%PlayerState{} = state, new_chunk_size) when is_integer(new_chunk_size) do
+    # Recalculate what the new chunk index should be after recreating the text chunks with a different size
+    new_index = recalculate_index(state.current_index, state.chunk_size, new_chunk_size)
+
+    new_parsed_text = TextChunk.parse(state.raw_text, new_chunk_size)
+
+    new_speed = calculate_speed(state.words_per_minute, new_chunk_size)
+
+    ReaderLive.broadcast!({:update_chunks_length, tuple_size(new_parsed_text)})
+
+    %{state | parsed_text: new_parsed_text, current_index: new_index, chunk_size: new_chunk_size, speed: new_speed}
+  end
+
+  defp do_stop(%PlayerState{} = state) do
+    ReaderLive.broadcast!({:multiple_assigns_changes, [playing: false, textarea_locked: false]})
+    ReaderLive.broadcast!(:selection_blur)
+
+    %{do_restart(state) | playing: false, textarea_locked: false}
+  end
 
   defp calculate_speed(words_per_minute, chunk_size)
        when is_integer(words_per_minute) and is_integer(chunk_size) do
@@ -200,18 +211,5 @@ defmodule QuickreadTogether.Player do
     seconds = rem(duration_seconds, 60)
 
     "#{minutes}m #{seconds}s"
-  end
-
-  defp do_update_chunk_size(%PlayerState{} = state, new_chunk_size) when is_integer(new_chunk_size) do
-    # Recalculate what the new chunk index should be after recreating the text chunks with a different size
-    new_index = recalculate_index(state.current_index, state.chunk_size, new_chunk_size)
-
-    new_parsed_text = TextChunk.parse(state.raw_text, new_chunk_size)
-
-    new_speed = calculate_speed(state.words_per_minute, new_chunk_size)
-
-    ReaderLive.broadcast!({:update_chunks_length, tuple_size(new_parsed_text)})
-
-    %{state | parsed_text: new_parsed_text, current_index: new_index, chunk_size: new_chunk_size, speed: new_speed}
   end
 end
