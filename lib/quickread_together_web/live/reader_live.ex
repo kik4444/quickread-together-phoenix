@@ -125,7 +125,9 @@ defmodule QuickreadTogetherWeb.ReaderLive do
   end
 
   def handle_info({:update_chunk, %TextChunk.Update{text_chunk: %TextChunk{}} = msg}, socket) do
-    socket = assign(socket, current_chunk: msg.text_chunk.chunk, current_index: msg.index, duration: msg.duration)
+    socket =
+      assign(socket, current_chunk: msg.text_chunk.chunk, current_index: msg.index, duration: msg.duration)
+      |> push_event("index_changed", %{index: msg.index})
 
     if msg.focus do
       {:noreply,

@@ -60,7 +60,15 @@
       </div>
 
       <.form for={@controls} phx-change="index_changed">
-        <input type="range" name="index" min="0" max={@chunks_length} value={@current_index} phx-throttle="500" />
+        <input
+          type="range"
+          id="index"
+          name="index"
+          min="0"
+          max={@chunks_length}
+          value={@current_index}
+          phx-throttle="500"
+        />
       </.form>
     </div>
 
