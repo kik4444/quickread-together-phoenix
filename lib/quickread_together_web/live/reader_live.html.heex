@@ -1,5 +1,5 @@
-<main class="h-screen w-screen p-6 grid grid-rows-[25%_30%_25%_10%] place-items-center">
-  <.form for={@textarea} phx-change="text_changed" class="w-full h-full grid place-items-center">
+<main class="h-screen w-screen p-6 grid grid-rows-[25%_30%_25%_15%] place-items-center">
+  <.form for={@textarea} phx-change="text_changed" class="w-full h-full">
     <textarea
       id="textarea"
       placeholder="Enter text to read quickly."
@@ -78,5 +78,5 @@
     </div>
   </div>
 
-  <p id="reader-count" class="">Readers here: {@reader_count}</p>
+  <p id="reader-count">Readers here: {@reader_count}</p>
 </main>
