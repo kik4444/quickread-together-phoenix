@@ -16,8 +16,9 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     Phoenix.PubSub.broadcast!(QuickreadTogether.PubSub, "reader:main", msg)
   end
 
-  def mount(_params, _session, socket) do
+  def mount(_params, _session, %Phoenix.LiveView.Socket{} = socket) do
     if connected?(socket) do
+      QuickreadTogetherWeb.Presence.track(socket.id)
       Phoenix.PubSub.subscribe(QuickreadTogether.PubSub, "reader:main")
     end
 
@@ -32,7 +33,8 @@ defmodule QuickreadTogetherWeb.ReaderLive do
        chunks_length: tuple_size(state.parsed_text) - 1,
        duration: state.duration,
        textarea_locked: state.textarea_locked,
-       controls: %{"words_per_minute" => state.words_per_minute, "chunk_size" => state.chunk_size}
+       controls: %{"words_per_minute" => state.words_per_minute, "chunk_size" => state.chunk_size},
+       reader_count: QuickreadTogetherWeb.Presence.get_reader_count()
      )}
   end
 
@@ -153,5 +155,9 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {:noreply,
      assign(socket, controls: %{socket.assigns.controls | "chunk_size" => chunk_size})
      |> push_event("chunk_size_changed", %{chunk_size: chunk_size})}
+  end
+
+  def handle_info({:reader_count, reader_count}, socket) do
+    {:noreply, assign(socket, reader_count: reader_count)}
   end
 end

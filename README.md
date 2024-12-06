@@ -7,4 +7,3 @@ and read it quickly together.
 ## Features
 - Realtime synchronization of text being read for all page visitors
 - Indicator for number of readers
-- TODO more?

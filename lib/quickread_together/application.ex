@@ -11,6 +11,7 @@ defmodule QuickreadTogether.Application do
       QuickreadTogether.Player,
       QuickreadTogetherWeb.Telemetry,
       {Phoenix.PubSub, name: QuickreadTogether.PubSub},
+      QuickreadTogetherWeb.Presence,
       # Start a worker by calling: QuickreadTogether.Worker.start_link(arg)
       # {QuickreadTogether.Worker, arg},
       # Start to serve requests, typically the last entry
