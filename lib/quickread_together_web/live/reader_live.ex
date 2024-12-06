@@ -72,7 +72,6 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     with {parsed, ""} <- Integer.parse(wpm),
          clamped <- clamp(parsed, 60, 1000) do
       Player.new_words_per_minute(clamped)
-      broadcast!({:wpm_changed, clamped})
     end
 
     {:noreply, socket}
@@ -82,7 +81,6 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     with {parsed, ""} <- Integer.parse(chunk_size),
          clamped <- clamp(parsed, 1, 10) do
       Player.new_chunk_size(clamped)
-      broadcast!({:chunk_size_changed, clamped})
     end
 
     {:noreply, socket}
@@ -102,9 +100,20 @@ defmodule QuickreadTogetherWeb.ReaderLive do
     {:noreply, socket}
   end
 
-  # Change multiple fields that are common between ReaderLive and Player.State
-  def handle_info({:multiple_assigns_changes, changes}, socket) when is_list(changes) do
-    {:noreply, assign(socket, changes)}
+  def handle_info(:play, socket) do
+    {:noreply,
+     assign(socket, playing: true, textarea_locked: true)
+     |> push_event("selection_focus", %{})}
+  end
+
+  def handle_info(:pause, socket) do
+    {:noreply, assign(socket, playing: false)}
+  end
+
+  def handle_info(:stop, socket) do
+    {:noreply,
+     assign(socket, playing: false, textarea_locked: false)
+     |> push_event("selection_blur", %{})}
   end
 
   def handle_info({:new_text, new_text}, socket) do
@@ -113,14 +122,6 @@ defmodule QuickreadTogetherWeb.ReaderLive do
      # We use push_event for inputs because updating the assigns
      # won't change the input's value on the frontend if the user is focused on it.
      |> push_event("new_text", %{new_text: new_text})}
-  end
-
-  def handle_info({:playing, _} = new_state, socket) do
-    {:noreply, assign(socket, [new_state])}
-  end
-
-  def handle_info({:textarea_locked, _} = new_state, socket) do
-    {:noreply, assign(socket, [new_state])}
   end
 
   def handle_info({:update_chunk, %TextChunk.Update{text_chunk: %TextChunk{}} = msg}, socket) do
@@ -139,14 +140,6 @@ defmodule QuickreadTogetherWeb.ReaderLive do
 
   def handle_info({:update_chunks_length, length}, socket) do
     {:noreply, assign(socket, chunks_length: length - 1)}
-  end
-
-  def handle_info(:selection_focus, socket) do
-    {:noreply, push_event(socket, "selection_focus", %{})}
-  end
-
-  def handle_info(:selection_blur, socket) do
-    {:noreply, push_event(socket, "selection_blur", %{})}
   end
 
   def handle_info({:wpm_changed, wpm}, socket) do

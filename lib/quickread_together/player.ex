@@ -31,9 +31,6 @@ defmodule QuickreadTogether.Player do
   @impl true
   def handle_call({:get, fun}, _from, state), do: {:reply, fun.(state), state}
 
-  @impl true
-  def handle_cast({:set, fun}, state), do: {:noreply, fun.(state)}
-
   # Initial start or resume from pause.
   @impl true
   def handle_cast(:play, %Player.State{playing: false} = state), do: {:noreply, do_play(state)}
@@ -45,7 +42,7 @@ defmodule QuickreadTogether.Player do
   # Pause during play.
   @impl true
   def handle_cast(:pause, %Player.State{playing: true, textarea_locked: true} = state) do
-    ReaderLive.broadcast!({:playing, false})
+    ReaderLive.broadcast!(:pause)
 
     {:noreply, %{state | playing: false}}
   end
@@ -79,10 +76,14 @@ defmodule QuickreadTogether.Player do
 
   @impl true
   def handle_cast({:wpm_changed, new_wpm}, %Player.State{chunk_size: chunk_size} = state) do
+    ReaderLive.broadcast!({:wpm_changed, new_wpm})
+
     {:noreply, %{state | words_per_minute: new_wpm, speed: calculate_speed(new_wpm, chunk_size)}}
   end
 
   def handle_cast({:chunk_size_changed, new_chunk_size}, %Player.State{} = state) do
+    ReaderLive.broadcast!({:chunk_size_changed, new_chunk_size})
+
     {:noreply, do_update_chunk_size(state, new_chunk_size)}
   end
 
@@ -140,8 +141,7 @@ defmodule QuickreadTogether.Player do
   end
 
   defp do_play(%Player.State{} = state) do
-    ReaderLive.broadcast!({:multiple_assigns_changes, [playing: true, textarea_locked: true]})
-    ReaderLive.broadcast!(:selection_focus)
+    ReaderLive.broadcast!(:play)
 
     send(self(), :next_chunk)
 
@@ -177,8 +177,7 @@ defmodule QuickreadTogether.Player do
   end
 
   defp do_stop(%Player.State{} = state) do
-    ReaderLive.broadcast!({:multiple_assigns_changes, [playing: false, textarea_locked: false]})
-    ReaderLive.broadcast!(:selection_blur)
+    ReaderLive.broadcast!(:stop)
 
     %{do_restart(state) | playing: false, textarea_locked: false}
   end
