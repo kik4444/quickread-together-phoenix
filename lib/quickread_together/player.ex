@@ -141,6 +141,7 @@ defmodule QuickreadTogether.Player do
 
   defp do_play(%Player.State{} = state) do
     ReaderLive.broadcast!({:multiple_assigns_changes, [playing: true, textarea_locked: true]})
+    ReaderLive.broadcast!(:selection_focus)
 
     send(self(), :next_chunk)
 
