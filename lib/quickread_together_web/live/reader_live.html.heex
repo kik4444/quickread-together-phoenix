@@ -1,4 +1,4 @@
-<main class="h-screen w-screen p-6 grid grid-rows-[25%_30%_25%_15%] place-items-center">
+<main class="h-screen w-screen p-6 grid grid-rows-[25%_30%_25%_1fr] place-items-center">
   <.form for={@textarea} phx-change="text_changed" class="w-full h-full">
     <textarea
       id="textarea"
@@ -48,14 +48,19 @@
       <.button phx-click="controls_reset_pressed">Reset</.button>
     </div>
 
-    <%!-- whitespace-nowrap to keep the chunk and duration on one line on mobile --%>
-    <div id="progress" class="w-full flex gap-2 whitespace-nowrap">
-      <p>Chunk: {@current_index} of {@chunks_length}</p>
+    <div id="progress" class="w-full grid grid-cols-[1fr_1fr_2fr] gap-1 place-items-center">
+      <div class="flex flex-col place-items-center overflow-hidden">
+        <label>Chunk</label>
+        <p>{@current_index} of {@chunks_length}</p>
+      </div>
 
-      <p>Duration: {@duration}</p>
+      <div class="flex flex-col place-items-center overflow-hidden">
+        <label>Duration</label>
+        <p>{@duration}</p>
+      </div>
 
       <.form for={@controls} phx-change="index_changed">
-        <input type="range" min="0" max={@chunks_length} name="index" value={@current_index} phx-debounce="500" />
+        <input type="range" name="index" min="0" max={@chunks_length} value={@current_index} phx-throttle="500" />
       </.form>
     </div>
 
