@@ -31,15 +31,15 @@ defmodule QuickreadTogether.TextChunk do
     end)
     |> then(&if &1 == [], do: [%__MODULE__{}], else: &1)
     |> Enum.chunk_every(chunk_size)
-    |> Enum.map(fn chunks ->
-      Enum.reduce(chunks, fn %__MODULE__{} = curr, %__MODULE__{} = prev ->
+    |> Enum.map(
+      &Enum.reduce(&1, fn %__MODULE__{} = curr, %__MODULE__{} = acc ->
         %__MODULE__{
-          chunk: prev.chunk <> " " <> curr.chunk,
-          start_offset: prev.start_offset,
+          chunk: acc.chunk <> " " <> curr.chunk,
+          start_offset: acc.start_offset,
           stop_offset: curr.stop_offset
         }
       end)
-    end)
+    )
     |> List.to_tuple()
   end
 
