@@ -70,7 +70,7 @@
           ## Consistency Checks
           #
           {Credo.Check.Consistency.ExceptionNames, []},
-          {Credo.Check.Consistency.LineEndings, []},
+          {Credo.Check.Consistency.LineEndings, [force: :unix]},
           {Credo.Check.Consistency.ParameterPatternMatching, []},
           {Credo.Check.Consistency.SpaceAroundOperators, []},
           {Credo.Check.Consistency.SpaceInParentheses, []},
@@ -83,7 +83,6 @@
           # Priority values are: `low, normal, high, higher`
           #
           {Credo.Check.Design.AliasUsage, [priority: :low, if_nested_deeper_than: 2, if_called_more_often_than: 0]},
-          {Credo.Check.Design.TagFIXME, []},
 
           #
           ## Readability Checks
@@ -176,6 +175,8 @@
           {Credo.Check.Warning.UnsafeToAtom, []}
         ],
         disabled: [
+          {Credo.Check.Design.TagFIXME, []},
+
           # You can also customize the exit_status of each check.
           # If you don't want TODO comments to cause `mix credo` to fail, just
           # set this value to 0 (zero).
